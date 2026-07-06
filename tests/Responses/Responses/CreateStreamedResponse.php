@@ -2,6 +2,8 @@
 
 use OpenAI\Responses\Responses\CreateResponse;
 use OpenAI\Responses\Responses\CreateStreamedResponse;
+use OpenAI\Responses\Responses\Output\OutputCompaction;
+use OpenAI\Responses\Responses\Streaming\OutputItem;
 use OpenAI\Responses\Responses\Streaming\RateLimits;
 use OpenAI\Responses\Responses\Streaming\ReasoningTextDelta;
 use OpenAI\Responses\Responses\Streaming\ReasoningTextDone;
@@ -67,4 +69,19 @@ test('rate limits updated event', function () {
         ->response->toArray()->toBe([
             'type' => 'response.rate_limits.updated',
         ]);
+});
+
+test('output item done event with compaction item', function () {
+    $response = CreateStreamedResponse::fake(responseOutputItemCompactionDoneEvent());
+
+    expect($response->getIterator()->current())
+        ->toBeInstanceOf(CreateStreamedResponse::class)
+        ->event->toBe('response.output_item.done')
+        ->response->toBeInstanceOf(OutputItem::class)
+        ->response->outputIndex->toBe(0)
+        ->response->sequenceNumber->toBe(11)
+        ->response->item->toBeInstanceOf(OutputCompaction::class)
+        ->response->item->id->toBe('cmp_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c')
+        ->response->item->encryptedContent->toBe('encrypted_string_value')
+        ->response->item->createdBy->toBe('user_123');
 });
