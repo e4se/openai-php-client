@@ -1042,3 +1042,8 @@ function responseRateLimitsUpdatedEvent()
 {
     return fopen(__DIR__.'/Streams/ResponseRateLimitsUpdated.txt', 'r');
 }
+
+function responseOutputItemCompactionDoneEvent()
+{
+    return fopen(__DIR__.'/Streams/ResponseOutputItemCompactionDone.txt', 'r');
+}
