@@ -12,6 +12,7 @@ use OpenAI\Responses\Responses\Output\OutputAdditionalTools;
 use OpenAI\Responses\Responses\Output\OutputApplyPatchCall;
 use OpenAI\Responses\Responses\Output\OutputApplyPatchCallOutput;
 use OpenAI\Responses\Responses\Output\OutputCodeInterpreterToolCall;
+use OpenAI\Responses\Responses\Output\OutputComputerToolCall;
 use OpenAI\Responses\Responses\Output\OutputCustomToolCall;
 use OpenAI\Responses\Responses\Output\OutputCustomToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
@@ -364,6 +365,7 @@ test('response output accepts optional tool call ids and current code interprete
 test('computer and MCP output items plus current hosted tools', function () {
     $payload = createResponseResource();
     $payload['output'] = [
+        outputComputerToolCallGa(),
         computerToolCallOutputItem(),
         mcpApprovalResponseItem(),
     ];
@@ -375,10 +377,12 @@ test('computer and MCP output items plus current hosted tools', function () {
     $response = CreateResponse::from($payload, meta());
 
     expect($response)
-        ->output->toHaveCount(2)
-        ->output->{0}->toBeInstanceOf(ComputerToolCallOutput::class)
-        ->output->{0}->createdBy->toBe('actor_computer')
-        ->output->{1}->toBeInstanceOf(McpApprovalResponse::class)
+        ->output->toHaveCount(3)
+        ->output->{0}->toBeInstanceOf(OutputComputerToolCall::class)
+        ->output->{0}->actions->toHaveCount(2)
+        ->output->{1}->toBeInstanceOf(ComputerToolCallOutput::class)
+        ->output->{1}->createdBy->toBe('actor_computer')
+        ->output->{2}->toBeInstanceOf(McpApprovalResponse::class)
         ->tools->toHaveCount(2)
         ->tools->{0}->toBeInstanceOf(ComputerTool::class)
         ->tools->{1}->toBeInstanceOf(WebSearchTool::class);

@@ -16,7 +16,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type ProgrammaticToolCallCallerType from ProgrammaticToolCallCaller
  *
  * @phpstan-type OutputShellCallOutputContentType array{outcome: array{type: 'timeout'}|array{type: 'exit', exit_code: int}, stderr: string, stdout: string, created_by?: string|null}
- * @phpstan-type OutputShellCallOutputType array{call_id: string, id: string, output: array<int, OutputShellCallOutputContentType>, status: 'in_progress'|'completed'|'incomplete', type: 'shell_call_output', max_output_length?: int|null, caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, created_by?: string|null}
+ * @phpstan-type OutputShellCallOutputType array{call_id: string, id: string, output: array<int, OutputShellCallOutputContentType>, status: 'in_progress'|'completed'|'incomplete', type: 'shell_call_output', max_output_length: int|null, caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, created_by?: string|null}
  *
  * @implements ResponseContract<OutputShellCallOutputType>
  */
@@ -69,11 +69,8 @@ final class OutputShellCallOutput implements ResponseContract
             'output' => $this->output,
             'status' => $this->status,
             'type' => $this->type,
+            'max_output_length' => $this->maxOutputLength,
         ];
-
-        if ($this->maxOutputLength !== null) {
-            $result['max_output_length'] = $this->maxOutputLength;
-        }
 
         if ($this->caller !== null) {
             $result['caller'] = $this->caller->toArray();

@@ -10,6 +10,7 @@ use OpenAI\Responses\Responses\Output\OutputApplyPatchCall;
 use OpenAI\Responses\Responses\Output\OutputApplyPatchCallOutput;
 use OpenAI\Responses\Responses\Output\OutputCodeInterpreterToolCall;
 use OpenAI\Responses\Responses\Output\OutputCompaction;
+use OpenAI\Responses\Responses\Output\OutputComputerToolCall;
 use OpenAI\Responses\Responses\Output\OutputCustomToolCall;
 use OpenAI\Responses\Responses\Output\OutputCustomToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
@@ -304,6 +305,7 @@ test('output item events accept programmatic tool families', function () {
 
 test('output item events accept computer and MCP result variants', function () {
     $items = [
+        [outputComputerToolCallGa(), OutputComputerToolCall::class],
         [computerToolCallOutputItem(), ComputerToolCallOutput::class],
         [mcpApprovalResponseItem(), McpApprovalResponse::class],
     ];

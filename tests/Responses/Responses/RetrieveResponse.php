@@ -8,6 +8,7 @@ use OpenAI\Responses\Responses\Input\ComputerToolCallOutput;
 use OpenAI\Responses\Responses\Input\McpApprovalResponse;
 use OpenAI\Responses\Responses\Output\OutputAdditionalTools;
 use OpenAI\Responses\Responses\Output\OutputApplyPatchCall;
+use OpenAI\Responses\Responses\Output\OutputComputerToolCall;
 use OpenAI\Responses\Responses\Output\OutputCustomToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputFunctionToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputShellCall;
@@ -181,6 +182,7 @@ test('programmatic tool result items', function () {
 test('computer and MCP output items plus current hosted tools', function () {
     $payload = retrieveResponseResource();
     $payload['output'] = [
+        outputComputerToolCallGa(),
         computerToolCallOutputItem(),
         mcpApprovalResponseItem(),
     ];
@@ -192,9 +194,11 @@ test('computer and MCP output items plus current hosted tools', function () {
     $response = RetrieveResponse::from($payload, meta());
 
     expect($response)
-        ->output->toHaveCount(2)
-        ->output->{0}->toBeInstanceOf(ComputerToolCallOutput::class)
-        ->output->{1}->toBeInstanceOf(McpApprovalResponse::class)
+        ->output->toHaveCount(3)
+        ->output->{0}->toBeInstanceOf(OutputComputerToolCall::class)
+        ->output->{0}->actions->toHaveCount(2)
+        ->output->{1}->toBeInstanceOf(ComputerToolCallOutput::class)
+        ->output->{2}->toBeInstanceOf(McpApprovalResponse::class)
         ->tools->toHaveCount(2)
         ->tools->{0}->toBeInstanceOf(ComputerTool::class)
         ->tools->{1}->toBeInstanceOf(WebSearchTool::class);

@@ -15,3 +15,14 @@ test('preserves programmatic caller and output', function () {
 
     expect($output->toArray())->toBe($attributes);
 });
+
+test('preserves required null max output length', function () {
+    $attributes = outputShellCallOutputProgrammatic();
+    $attributes['max_output_length'] = null;
+
+    $output = OutputShellCallOutput::from($attributes);
+
+    expect($output)
+        ->maxOutputLength->toBeNull()
+        ->toArray()->toBe($attributes);
+});

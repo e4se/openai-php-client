@@ -15,3 +15,14 @@ test('preserves programmatic caller', function () {
 
     expect($call->toArray())->toBe($attributes);
 });
+
+test('preserves required null environment', function () {
+    $attributes = outputShellCallProgrammatic();
+    $attributes['environment'] = null;
+
+    $call = OutputShellCall::from($attributes);
+
+    expect($call)
+        ->environment->toBeNull()
+        ->toArray()->toBe($attributes);
+});

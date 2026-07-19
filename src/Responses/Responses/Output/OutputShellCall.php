@@ -15,8 +15,8 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type DirectToolCallCallerType from DirectToolCallCaller
  * @phpstan-import-type ProgrammaticToolCallCallerType from ProgrammaticToolCallCaller
  *
- * @phpstan-type OutputShellCallActionType array{commands: array<int, string>, max_output_length?: int|null, timeout_ms?: int|null}
- * @phpstan-type OutputShellCallType array{action: OutputShellCallActionType, call_id: string, id: string, status: 'in_progress'|'completed'|'incomplete', type: 'shell_call', environment?: array<string, mixed>|null, caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, created_by?: string|null}
+ * @phpstan-type OutputShellCallActionType array{commands: array<int, string>, max_output_length: int|null, timeout_ms: int|null}
+ * @phpstan-type OutputShellCallType array{action: OutputShellCallActionType, call_id: string, id: string, status: 'in_progress'|'completed'|'incomplete', type: 'shell_call', environment: array<string, mixed>|null, caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, created_by?: string|null}
  *
  * @implements ResponseContract<OutputShellCallType>
  */
@@ -70,11 +70,8 @@ final class OutputShellCall implements ResponseContract
             'id' => $this->id,
             'status' => $this->status,
             'type' => $this->type,
+            'environment' => $this->environment,
         ];
-
-        if ($this->environment !== null) {
-            $result['environment'] = $this->environment;
-        }
 
         if ($this->caller !== null) {
             $result['caller'] = $this->caller->toArray();

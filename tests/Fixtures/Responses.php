@@ -570,6 +570,32 @@ function outputComputerToolCall(): array
 /**
  * @return array<string, mixed>
  */
+function outputComputerToolCallGa(): array
+{
+    return [
+        'type' => 'computer_call',
+        'call_id' => 'call_ga_computer_123',
+        'id' => 'cu_ga_123',
+        'actions' => [
+            [
+                'button' => 'left',
+                'type' => 'click',
+                'x' => 117,
+                'y' => 123,
+            ],
+            [
+                'keys' => ['ENTER'],
+                'type' => 'keypress',
+            ],
+        ],
+        'pending_safety_checks' => [],
+        'status' => 'completed',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
 function outputWebSearchToolCall(): array
 {
     return [
