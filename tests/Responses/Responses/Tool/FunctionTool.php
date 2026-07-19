@@ -34,9 +34,11 @@ test('programmatic configuration is optional', function () {
     expect($tool->toArray())->toBe($attributes);
 });
 
-test('parameters and strict are optional', function () {
+test('parameters and strict are serialized when null', function () {
     $attributes = [
         'name' => 'get_inventory',
+        'parameters' => null,
+        'strict' => null,
         'type' => 'function',
     ];
 

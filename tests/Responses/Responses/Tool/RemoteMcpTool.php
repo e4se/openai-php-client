@@ -98,7 +98,7 @@ test('preserves programmatic configuration', function () {
 
 test('preserves secure tunnel id', function () {
     $attributes = toolRemoteMcp();
-    $attributes['server_url'] = null;
+    unset($attributes['server_url']);
     $attributes['tunnel_id'] = 'tunnel_123';
 
     $response = RemoteMcpTool::from($attributes);
@@ -108,6 +108,28 @@ test('preserves secure tunnel id', function () {
         ->tunnelId->toBe('tunnel_123');
 
     expect($response->toArray())->toBe($attributes);
+});
+
+test('omits non-nullable MCP fields when absent', function () {
+    $attributes = [
+        'type' => 'mcp',
+        'server_label' => 'Dropbox',
+        'require_approval' => null,
+        'allowed_tools' => null,
+        'headers' => null,
+        'connector_id' => 'connector_dropbox',
+    ];
+
+    $response = RemoteMcpTool::from($attributes);
+
+    expect($response->toArray())
+        ->toBe($attributes)
+        ->not->toHaveKeys([
+            'server_url',
+            'authorization',
+            'server_description',
+            'tunnel_id',
+        ]);
 });
 
 test('preserves read only approval filter', function () {

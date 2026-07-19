@@ -1009,9 +1009,6 @@ function toolRemoteMcp(): array
         'require_approval' => null,
         'allowed_tools' => null,
         'headers' => null,
-        'connector_id' => null,
-        'authorization' => null,
-        'server_description' => null,
         'defer_loading' => true,
     ];
 }
@@ -1034,7 +1031,6 @@ function toolRemoveMcpRequireApproval(): array
         ],
         'allowed_tools' => null,
         'headers' => null,
-        'server_description' => null,
     ];
 }
 
@@ -1046,13 +1042,11 @@ function toolConnectorMcp(): array
     return [
         'type' => 'mcp',
         'server_label' => 'Dropbox',
-        'server_url' => null,
         'require_approval' => 'never',
         'allowed_tools' => null,
         'headers' => null,
         'connector_id' => 'connector_dropbox',
         'authorization' => '<redacted>',
-        'server_description' => null,
     ];
 }
 

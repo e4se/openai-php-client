@@ -109,14 +109,27 @@ final class RemoteMcpTool implements ResponseContract
         $result = [
             'type' => $this->type,
             'server_label' => $this->serverLabel,
-            'server_url' => $this->serverUrl,
-            'require_approval' => $requireApproval,
-            'allowed_tools' => $allowedTools,
-            'headers' => $this->headers,
-            'connector_id' => $this->connectorId,
-            'authorization' => $this->authorization,
-            'server_description' => $this->serverDescription,
         ];
+
+        if ($this->serverUrl !== null) {
+            $result['server_url'] = $this->serverUrl;
+        }
+
+        $result['require_approval'] = $requireApproval;
+        $result['allowed_tools'] = $allowedTools;
+        $result['headers'] = $this->headers;
+
+        if ($this->connectorId !== null) {
+            $result['connector_id'] = $this->connectorId;
+        }
+
+        if ($this->authorization !== null) {
+            $result['authorization'] = $this->authorization;
+        }
+
+        if ($this->serverDescription !== null) {
+            $result['server_description'] = $this->serverDescription;
+        }
 
         if ($this->deferLoading !== null) {
             $result['defer_loading'] = $this->deferLoading;

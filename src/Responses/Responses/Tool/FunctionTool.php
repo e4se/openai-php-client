@@ -9,7 +9,7 @@ use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
 /**
- * @phpstan-type FunctionToolType array{name: string, parameters?: array<string, mixed>|null, strict?: bool|null, type: 'function', description?: string|null, defer_loading?: bool, allowed_callers?: array<int, 'direct'|'programmatic'>, output_schema?: array<string, mixed>}
+ * @phpstan-type FunctionToolType array{name: string, parameters: array<string, mixed>|null, strict: bool|null, type: 'function', description?: string|null, defer_loading?: bool, allowed_callers?: array<int, 'direct'|'programmatic'>, output_schema?: array<string, mixed>}
  *
  * @implements ResponseContract<FunctionToolType>
  */
@@ -61,13 +61,16 @@ final class FunctionTool implements ResponseContract
      */
     public function toArray(): array
     {
-        $result = array_filter([
+        $result = [
             'name' => $this->name,
             'parameters' => $this->parameters,
             'strict' => $this->strict,
             'type' => $this->type,
-            'description' => $this->description,
-        ], fn (mixed $value): bool => $value !== null);
+        ];
+
+        if ($this->description !== null) {
+            $result['description'] = $this->description;
+        }
 
         if ($this->deferLoading !== null) {
             $result['defer_loading'] = $this->deferLoading;
