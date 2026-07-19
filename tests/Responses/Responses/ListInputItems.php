@@ -1,7 +1,21 @@
 <?php
 
 use OpenAI\Responses\Meta\MetaInformation;
+use OpenAI\Responses\Responses\Input\CustomToolCallOutput;
+use OpenAI\Responses\Responses\Input\FunctionToolCallOutput;
 use OpenAI\Responses\Responses\ListInputItems;
+use OpenAI\Responses\Responses\Output\OutputAdditionalTools;
+use OpenAI\Responses\Responses\Output\OutputApplyPatchCall;
+use OpenAI\Responses\Responses\Output\OutputApplyPatchCallOutput;
+use OpenAI\Responses\Responses\Output\OutputCompaction;
+use OpenAI\Responses\Responses\Output\OutputCustomToolCall;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
+use OpenAI\Responses\Responses\Output\OutputProgram;
+use OpenAI\Responses\Responses\Output\OutputProgramOutput;
+use OpenAI\Responses\Responses\Output\OutputShellCall;
+use OpenAI\Responses\Responses\Output\OutputShellCallOutput;
+use OpenAI\Responses\Responses\Output\OutputToolSearchCall;
+use OpenAI\Responses\Responses\Output\OutputToolSearchOutput;
 
 test('from', function () {
     $result = ListInputItems::from(listInputItemsResource(), meta());
@@ -51,4 +65,100 @@ test('fake with override', function () {
         ->object->toBe('custom_list')
         ->firstId->toBe('msg_1234')
         ->hasMore->toBeTrue();
+});
+
+test('program items can be replayed as input', function () {
+    $payload = listInputItemsResource();
+    $payload['data'] = [
+        outputProgram(),
+        outputProgramOutput(),
+        functionToolCallOutputProgrammatic(),
+        outputCustomToolCallProgrammatic(),
+        customToolCallOutputProgrammatic(),
+        outputShellCallProgrammatic(),
+        outputShellCallOutputProgrammatic(),
+        outputApplyPatchCallProgrammatic(),
+        outputApplyPatchCallOutputProgrammatic(),
+        outputToolSearchCall(),
+        outputToolSearchOutput(),
+    ];
+
+    $result = ListInputItems::from($payload, meta());
+
+    expect($result)
+        ->data->toHaveCount(11)
+        ->data->{0}->toBeInstanceOf(OutputProgram::class)
+        ->data->{1}->toBeInstanceOf(OutputProgramOutput::class)
+        ->data->{2}->caller->callerId->toBe('call_prog_123')
+        ->data->{3}->toBeInstanceOf(OutputCustomToolCall::class)
+        ->data->{3}->caller->callerId->toBe('call_prog_123')
+        ->data->{4}->toBeInstanceOf(CustomToolCallOutput::class)
+        ->data->{4}->caller->callerId->toBe('call_prog_123')
+        ->data->{5}->toBeInstanceOf(OutputShellCall::class)
+        ->data->{6}->toBeInstanceOf(OutputShellCallOutput::class)
+        ->data->{7}->toBeInstanceOf(OutputApplyPatchCall::class)
+        ->data->{8}->toBeInstanceOf(OutputApplyPatchCallOutput::class)
+        ->data->{9}->toBeInstanceOf(OutputToolSearchCall::class)
+        ->data->{10}->toBeInstanceOf(OutputToolSearchOutput::class);
+
+    expect($result->toArray()['data'])->toBe($payload['data']);
+});
+
+test('listed tool items preserve provenance', function () {
+    $functionCall = outputFunctionToolCallProgrammatic();
+    $functionCall['created_by'] = 'actor_function_call';
+
+    $customCall = outputCustomToolCallProgrammatic();
+    $customCall['status'] = 'completed';
+    $customCall['created_by'] = 'actor_custom_call';
+
+    $functionOutput = functionToolCallOutputProgrammatic();
+    $functionOutput['created_by'] = 'actor_function_output';
+
+    $customOutput = customToolCallOutputProgrammatic();
+    $customOutput['created_by'] = 'actor_custom_output';
+
+    $payload = listInputItemsResource();
+    $payload['data'] = [$functionCall, $customCall, $functionOutput, $customOutput];
+
+    $result = ListInputItems::from($payload, meta());
+
+    expect($result->data)
+        ->{0}->toBeInstanceOf(OutputFunctionToolCall::class)
+        ->{0}->createdBy->toBe('actor_function_call')
+        ->{1}->toBeInstanceOf(OutputCustomToolCall::class)
+        ->{1}->status->toBe('completed')
+        ->{1}->createdBy->toBe('actor_custom_call')
+        ->{2}->toBeInstanceOf(FunctionToolCallOutput::class)
+        ->{2}->createdBy->toBe('actor_function_output')
+        ->{3}->toBeInstanceOf(CustomToolCallOutput::class)
+        ->{3}->createdBy->toBe('actor_custom_output');
+
+    expect($result->toArray()['data'])->toBe($payload['data']);
+});
+
+test('additional tools can be replayed as input', function () {
+    $payload = listInputItemsResource();
+    $payload['data'] = [outputAdditionalTools()];
+
+    $result = ListInputItems::from($payload, meta());
+
+    expect($result->data)
+        ->toHaveCount(1)
+        ->{0}->toBeInstanceOf(OutputAdditionalTools::class);
+
+    expect($result->toArray()['data'])->toBe($payload['data']);
+});
+
+test('compaction items can be replayed as input', function () {
+    $payload = listInputItemsResource();
+    $payload['data'] = [outputCompaction()];
+
+    $result = ListInputItems::from($payload, meta());
+
+    expect($result->data)
+        ->toHaveCount(1)
+        ->{0}->toBeInstanceOf(OutputCompaction::class);
+
+    expect($result->toArray()['data'])->toBe($payload['data']);
 });

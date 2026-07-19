@@ -9,7 +9,7 @@ use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
 /**
- * @phpstan-type UserLocationType array{type: 'approximate', city: string|null, country: string, region: string|null, timezone: string|null}
+ * @phpstan-type UserLocationType array{type?: 'approximate'|null, city?: string|null, country?: string|null, region?: string|null, timezone?: string|null}
  *
  * @implements ResponseContract<UserLocationType>
  */
@@ -23,12 +23,12 @@ final class WebSearchUserLocation implements ResponseContract
     use Fakeable;
 
     /**
-     * @param  'approximate'  $type
+     * @param  'approximate'|null  $type
      */
     private function __construct(
-        public readonly string $type,
+        public readonly ?string $type,
         public readonly ?string $city,
-        public readonly string $country,
+        public readonly ?string $country,
         public readonly ?string $region,
         public readonly ?string $timezone,
     ) {}
@@ -39,9 +39,9 @@ final class WebSearchUserLocation implements ResponseContract
     public static function from(array $attributes): self
     {
         return new self(
-            type: $attributes['type'],
+            type: $attributes['type'] ?? null,
             city: $attributes['city'] ?? null,
-            country: $attributes['country'],
+            country: $attributes['country'] ?? null,
             region: $attributes['region'] ?? null,
             timezone: $attributes['timezone'] ?? null,
         );
@@ -52,12 +52,28 @@ final class WebSearchUserLocation implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
-            'type' => $this->type,
-            'city' => $this->city,
-            'country' => $this->country,
-            'region' => $this->region,
-            'timezone' => $this->timezone,
-        ];
+        $result = [];
+
+        if ($this->type !== null) {
+            $result['type'] = $this->type;
+        }
+
+        if ($this->city !== null) {
+            $result['city'] = $this->city;
+        }
+
+        if ($this->country !== null) {
+            $result['country'] = $this->country;
+        }
+
+        if ($this->region !== null) {
+            $result['region'] = $this->region;
+        }
+
+        if ($this->timezone !== null) {
+            $result['timezone'] = $this->timezone;
+        }
+
+        return $result;
     }
 }

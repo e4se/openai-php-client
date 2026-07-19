@@ -5,6 +5,32 @@ use OpenAI\Responses\Responses\CreateResponse;
 use OpenAI\Responses\Responses\CreateResponseFormat;
 use OpenAI\Responses\Responses\CreateResponseReasoning;
 use OpenAI\Responses\Responses\CreateResponseUsage;
+use OpenAI\Responses\Responses\Input\ComputerToolCallOutput;
+use OpenAI\Responses\Responses\Input\LocalShellCallOutput;
+use OpenAI\Responses\Responses\Input\McpApprovalResponse;
+use OpenAI\Responses\Responses\Output\OutputAdditionalTools;
+use OpenAI\Responses\Responses\Output\OutputApplyPatchCall;
+use OpenAI\Responses\Responses\Output\OutputApplyPatchCallOutput;
+use OpenAI\Responses\Responses\Output\OutputCodeInterpreterToolCall;
+use OpenAI\Responses\Responses\Output\OutputCustomToolCall;
+use OpenAI\Responses\Responses\Output\OutputCustomToolCallOutput;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCallOutput;
+use OpenAI\Responses\Responses\Output\OutputProgram;
+use OpenAI\Responses\Responses\Output\OutputProgramOutput;
+use OpenAI\Responses\Responses\Output\OutputShellCall;
+use OpenAI\Responses\Responses\Output\OutputShellCallOutput;
+use OpenAI\Responses\Responses\Tool\ApplyPatchTool;
+use OpenAI\Responses\Responses\Tool\ComputerTool;
+use OpenAI\Responses\Responses\Tool\FunctionTool;
+use OpenAI\Responses\Responses\Tool\LocalShellTool;
+use OpenAI\Responses\Responses\Tool\ProgrammaticToolCallingTool;
+use OpenAI\Responses\Responses\Tool\ShellTool;
+use OpenAI\Responses\Responses\Tool\WebSearchTool;
+use OpenAI\Responses\Responses\ToolChoice\AllowedToolsToolChoice;
+use OpenAI\Responses\Responses\ToolChoice\CustomToolChoice;
+use OpenAI\Responses\Responses\ToolChoice\HostedToolChoice;
+use OpenAI\Responses\Responses\ToolChoice\McpToolChoice;
 use OpenAI\Testing\Enums\OverrideStrategy;
 
 test('from', function () {
@@ -182,4 +208,255 @@ test('to array with null text field', function () {
     expect($array)
         ->toBeArray()
         ->text->toBeNull();
+});
+
+test('programmatic tool calling response', function () {
+    $payload = createResponseResource();
+    $payload['output'] = [
+        outputProgram(),
+        outputFunctionToolCallProgrammatic(),
+        outputProgramOutput(),
+    ];
+    $payload['tools'] = [
+        toolFunctionProgrammatic(),
+        toolProgrammaticToolCalling(),
+    ];
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response)
+        ->output->toHaveCount(3)
+        ->output->{0}->toBeInstanceOf(OutputProgram::class)
+        ->output->{1}->toBeInstanceOf(OutputFunctionToolCall::class)
+        ->output->{1}->namespace->toBe('inventory')
+        ->output->{1}->caller->callerId->toBe('call_prog_123')
+        ->output->{2}->toBeInstanceOf(OutputProgramOutput::class)
+        ->tools->toHaveCount(2)
+        ->tools->{0}->toBeInstanceOf(FunctionTool::class)
+        ->tools->{0}->allowedCallers->toBe(['programmatic'])
+        ->tools->{1}->toBeInstanceOf(ProgrammaticToolCallingTool::class);
+});
+
+test('forced programmatic tool choice', function () {
+    $payload = createResponseResource();
+    $payload['tool_choice'] = toolProgrammaticToolCalling();
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response->toolChoice)
+        ->toBeInstanceOf(HostedToolChoice::class)
+        ->type->toBe('programmatic_tool_calling');
+
+    expect($response->toArray()['tool_choice'])
+        ->toBe(toolProgrammaticToolCalling());
+});
+
+test('forced hosted tool choice', function (string $type) {
+    $payload = createResponseResource();
+    $payload['tool_choice'] = ['type' => $type];
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response->toolChoice)
+        ->toBeInstanceOf(HostedToolChoice::class)
+        ->type->toBe($type);
+
+    expect($response->toArray()['tool_choice'])
+        ->toBe(['type' => $type]);
+})->with([
+    'shell',
+    'apply_patch',
+    'computer',
+    'computer_use',
+    'web_search_preview_2025_03_11',
+    'image_generation',
+    'code_interpreter',
+]);
+
+test('forced structured tool choice', function (array $toolChoice, string $class) {
+    $payload = createResponseResource();
+    $payload['tool_choice'] = $toolChoice;
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response->toolChoice)->toBeInstanceOf($class);
+    expect($response->toArray()['tool_choice'])->toBe($toolChoice);
+})->with([
+    'custom' => [
+        ['name' => 'inventory', 'type' => 'custom'],
+        CustomToolChoice::class,
+    ],
+    'mcp' => [
+        ['server_label' => 'inventory', 'type' => 'mcp', 'name' => 'lookup'],
+        McpToolChoice::class,
+    ],
+    'allowed tools' => [
+        [
+            'mode' => 'required',
+            'tools' => [
+                ['name' => 'get_inventory', 'type' => 'function'],
+            ],
+            'type' => 'allowed_tools',
+        ],
+        AllowedToolsToolChoice::class,
+    ],
+]);
+
+test('programmatic tool result items', function () {
+    $payload = createResponseResource();
+    $payload['output'] = [
+        functionToolCallOutputProgrammatic(),
+        customToolCallOutputProgrammatic(),
+    ];
+    $payload['output'][0]['created_by'] = 'actor_function';
+    $payload['output'][1]['created_by'] = 'actor_custom';
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response)
+        ->output->toHaveCount(2)
+        ->output->{0}->toBeInstanceOf(OutputFunctionToolCallOutput::class)
+        ->output->{0}->createdBy->toBe('actor_function')
+        ->output->{0}->caller->callerId->toBe('call_prog_123')
+        ->output->{1}->toBeInstanceOf(OutputCustomToolCallOutput::class)
+        ->output->{1}->createdBy->toBe('actor_custom')
+        ->output->{1}->status->toBe('completed')
+        ->output->{1}->caller->callerId->toBe('call_prog_123');
+
+    expect($response->toArray()['output'])
+        ->toBe($payload['output']);
+});
+
+test('response output accepts optional tool call ids and current code interpreter outputs', function () {
+    $functionCall = outputFunctionToolCallProgrammatic();
+    unset($functionCall['id']);
+
+    $customCall = outputCustomToolCallProgrammatic();
+    unset($customCall['id']);
+
+    $codeInterpreterCall = [
+        'code' => null,
+        'id' => 'ci_image',
+        'outputs' => [
+            ['type' => 'image', 'url' => 'https://example.com/chart.png'],
+        ],
+        'status' => 'completed',
+        'type' => 'code_interpreter_call',
+        'container_id' => 'container_image',
+    ];
+
+    $payload = createResponseResource();
+    $payload['output'] = [$functionCall, $customCall, $codeInterpreterCall];
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response->output)
+        ->{0}->toBeInstanceOf(OutputFunctionToolCall::class)
+        ->{0}->id->toBeNull()
+        ->{1}->toBeInstanceOf(OutputCustomToolCall::class)
+        ->{1}->id->toBeNull()
+        ->{2}->toBeInstanceOf(OutputCodeInterpreterToolCall::class)
+        ->{2}->code->toBeNull();
+
+    expect($response->toArray()['output'])->toBe($payload['output']);
+});
+
+test('computer and MCP output items plus current hosted tools', function () {
+    $payload = createResponseResource();
+    $payload['output'] = [
+        computerToolCallOutputItem(),
+        mcpApprovalResponseItem(),
+    ];
+    $payload['tools'] = [
+        ['type' => 'computer'],
+        ['type' => 'web_search_2025_08_26'],
+    ];
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response)
+        ->output->toHaveCount(2)
+        ->output->{0}->toBeInstanceOf(ComputerToolCallOutput::class)
+        ->output->{0}->createdBy->toBe('actor_computer')
+        ->output->{1}->toBeInstanceOf(McpApprovalResponse::class)
+        ->tools->toHaveCount(2)
+        ->tools->{0}->toBeInstanceOf(ComputerTool::class)
+        ->tools->{1}->toBeInstanceOf(WebSearchTool::class);
+
+    expect($response->toArray()['output'])->toBe($payload['output']);
+    expect($response->toArray()['tools'])->toBe($payload['tools']);
+});
+
+test('programmatic tool result items with content array outputs', function () {
+    $payload = createResponseResource();
+    $content = [
+        ['type' => 'input_text', 'text' => 'result'],
+        ['type' => 'input_image', 'detail' => 'auto', 'file_id' => 'file_image', 'image_url' => null],
+        ['type' => 'input_file', 'file_id' => 'file_document', 'filename' => 'result.txt'],
+    ];
+    $functionOutput = functionToolCallOutputProgrammatic();
+    $functionOutput['output'] = $content;
+    $customOutput = customToolCallOutputProgrammatic();
+    $customOutput['output'] = $content;
+    $payload['output'] = [$functionOutput, $customOutput];
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response)
+        ->output->{0}->toBeInstanceOf(OutputFunctionToolCallOutput::class)
+        ->output->{0}->output->toBe($content)
+        ->output->{1}->toBeInstanceOf(OutputCustomToolCallOutput::class)
+        ->output->{1}->output->toBe($content);
+
+    expect($response->toArray()['output'])
+        ->toBe($payload['output']);
+});
+
+test('programmatic shell and apply patch variants', function () {
+    $payload = createResponseResource();
+    $payload['output'] = [
+        outputShellCallProgrammatic(),
+        outputShellCallOutputProgrammatic(),
+        outputApplyPatchCallProgrammatic(),
+        outputApplyPatchCallOutputProgrammatic(),
+        outputLocalShellCall(),
+        localShellCallOutputItem(),
+    ];
+    $payload['tools'] = [
+        toolShellProgrammatic(),
+        toolApplyPatchProgrammatic(),
+        toolLocalShell(),
+        toolProgrammaticToolCalling(),
+    ];
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response->output)
+        ->{0}->toBeInstanceOf(OutputShellCall::class)
+        ->{1}->toBeInstanceOf(OutputShellCallOutput::class)
+        ->{2}->toBeInstanceOf(OutputApplyPatchCall::class)
+        ->{3}->toBeInstanceOf(OutputApplyPatchCallOutput::class)
+        ->{5}->toBeInstanceOf(LocalShellCallOutput::class);
+
+    expect($response->tools)
+        ->{0}->toBeInstanceOf(ShellTool::class)
+        ->{1}->toBeInstanceOf(ApplyPatchTool::class)
+        ->{2}->toBeInstanceOf(LocalShellTool::class);
+
+    expect($response->toArray()['output'])->toBe($payload['output']);
+    expect($response->toArray()['tools'])->toBe($payload['tools']);
+});
+
+test('additional tools output item', function () {
+    $payload = createResponseResource();
+    $payload['output'] = [outputAdditionalTools()];
+
+    $response = CreateResponse::from($payload, meta());
+
+    expect($response->output)
+        ->toHaveCount(1)
+        ->{0}->toBeInstanceOf(OutputAdditionalTools::class)
+        ->{0}->tools->{0}->toBeInstanceOf(FunctionTool::class);
+
+    expect($response->toArray()['output'])->toBe($payload['output']);
 });

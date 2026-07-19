@@ -42,3 +42,16 @@ test('namespace tool with custom tool', function () {
     expect($response->toArray())
         ->toBe($data);
 });
+
+test('preserves allowed callers', function () {
+    $attributes = toolCustom();
+    $attributes['allowed_callers'] = ['direct', 'programmatic'];
+
+    $response = CustomTool::from($attributes);
+
+    expect($response->allowedCallers)
+        ->toBe(['direct', 'programmatic']);
+
+    expect($response->toArray())
+        ->toBe($attributes);
+});

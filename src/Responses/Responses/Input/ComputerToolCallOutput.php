@@ -12,7 +12,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type ComputerToolCallOutputScreenshotType from ComputerToolCallOutputScreenshot
  * @phpstan-import-type AcknowledgedSafetyCheckType from AcknowledgedSafetyCheck
  *
- * @phpstan-type ComputerToolCallOutputType array{call_id: string, id: string, output: ComputerToolCallOutputScreenshotType, type: 'computer_call_output', acknowledged_safety_checks: array<int, AcknowledgedSafetyCheckType>, status: 'in_progress'|'completed'|'incomplete'}
+ * @phpstan-type ComputerToolCallOutputType array{call_id: string, id: string, output: ComputerToolCallOutputScreenshotType, type: 'computer_call_output', acknowledged_safety_checks?: array<int, AcknowledgedSafetyCheckType>|null, status: 'in_progress'|'completed'|'incomplete'|'failed', created_by?: string|null}
  *
  * @implements ResponseContract<ComputerToolCallOutputType>
  */
@@ -27,16 +27,17 @@ final class ComputerToolCallOutput implements ResponseContract
 
     /**
      * @param  'computer_call_output'  $type
-     * @param  array<int, AcknowledgedSafetyCheck>  $acknowledgedSafetyChecks
-     * @param  'in_progress'|'completed'|'incomplete'  $status
+     * @param  array<int, AcknowledgedSafetyCheck>|null  $acknowledgedSafetyChecks
+     * @param  'in_progress'|'completed'|'incomplete'|'failed'  $status
      */
     private function __construct(
         public readonly string $callId,
         public readonly string $id,
         public readonly ComputerToolCallOutputScreenshot $output,
         public readonly string $type,
-        public readonly array $acknowledgedSafetyChecks,
+        public readonly ?array $acknowledgedSafetyChecks,
         public readonly string $status,
+        public readonly ?string $createdBy,
     ) {}
 
     /**
@@ -44,10 +45,12 @@ final class ComputerToolCallOutput implements ResponseContract
      */
     public static function from(array $attributes): self
     {
-        $acknowledgedSafetyChecks = array_map(
-            fn (array $acknowledgedSafetyCheck) => AcknowledgedSafetyCheck::from($acknowledgedSafetyCheck),
-            $attributes['acknowledged_safety_checks'],
-        );
+        $acknowledgedSafetyChecks = isset($attributes['acknowledged_safety_checks'])
+            ? array_map(
+                fn (array $acknowledgedSafetyCheck) => AcknowledgedSafetyCheck::from($acknowledgedSafetyCheck),
+                $attributes['acknowledged_safety_checks'],
+            )
+            : null;
 
         return new self(
             callId: $attributes['call_id'],
@@ -56,6 +59,7 @@ final class ComputerToolCallOutput implements ResponseContract
             type: $attributes['type'],
             acknowledgedSafetyChecks: $acknowledgedSafetyChecks,
             status: $attributes['status'],
+            createdBy: $attributes['created_by'] ?? null,
         );
     }
 
@@ -64,16 +68,25 @@ final class ComputerToolCallOutput implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
+        $result = [
             'call_id' => $this->callId,
             'id' => $this->id,
             'output' => $this->output->toArray(),
             'type' => $this->type,
-            'acknowledged_safety_checks' => array_map(
-                fn (AcknowledgedSafetyCheck $acknowledgedSafetyCheck) => $acknowledgedSafetyCheck->toArray(),
-                $this->acknowledgedSafetyChecks,
-            ),
             'status' => $this->status,
         ];
+
+        if ($this->acknowledgedSafetyChecks !== null) {
+            $result['acknowledged_safety_checks'] = array_map(
+                fn (AcknowledgedSafetyCheck $acknowledgedSafetyCheck) => $acknowledgedSafetyCheck->toArray(),
+                $this->acknowledgedSafetyChecks,
+            );
+        }
+
+        if ($this->createdBy !== null) {
+            $result['created_by'] = $this->createdBy;
+        }
+
+        return $result;
     }
 }

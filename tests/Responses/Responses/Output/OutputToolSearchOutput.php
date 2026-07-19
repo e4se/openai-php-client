@@ -1,6 +1,8 @@
 <?php
 
 use OpenAI\Responses\Responses\Output\OutputToolSearchOutput;
+use OpenAI\Responses\Responses\Tool\FunctionTool;
+use OpenAI\Responses\Responses\Tool\RemoteMcpTool;
 use OpenAI\Responses\Responses\Tool\WebSearchTool;
 
 test('from', function () {
@@ -31,4 +33,27 @@ test('to array', function () {
     expect($response->toArray())
         ->toBeArray()
         ->toBe(outputToolSearchOutput());
+});
+
+test('preserves deferred programmatic tools', function () {
+    $attributes = outputToolSearchOutput();
+    $attributes['tools'] = [
+        toolFunctionProgrammatic(),
+        [
+            ...toolRemoteMcp(),
+            'allowed_callers' => ['programmatic'],
+        ],
+    ];
+
+    $response = OutputToolSearchOutput::from($attributes);
+
+    expect($response->tools)
+        ->{0}->toBeInstanceOf(FunctionTool::class)
+        ->{0}->deferLoading->toBeTrue()
+        ->{0}->allowedCallers->toBe(['programmatic'])
+        ->{1}->toBeInstanceOf(RemoteMcpTool::class)
+        ->{1}->deferLoading->toBeTrue()
+        ->{1}->allowedCallers->toBe(['programmatic']);
+
+    expect($response->toArray())->toBe($attributes);
 });

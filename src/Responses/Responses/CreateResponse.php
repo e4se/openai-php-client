@@ -13,34 +13,54 @@ use OpenAI\Contracts\ResponseHasMetaInformationContract;
 use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Responses\Concerns\HasMetaInformation;
 use OpenAI\Responses\Meta\MetaInformation;
+use OpenAI\Responses\Responses\Input\ComputerToolCallOutput;
+use OpenAI\Responses\Responses\Input\LocalShellCallOutput;
+use OpenAI\Responses\Responses\Input\McpApprovalResponse;
+use OpenAI\Responses\Responses\Output\OutputAdditionalTools;
+use OpenAI\Responses\Responses\Output\OutputApplyPatchCall;
+use OpenAI\Responses\Responses\Output\OutputApplyPatchCallOutput;
 use OpenAI\Responses\Responses\Output\OutputCodeInterpreterToolCall;
 use OpenAI\Responses\Responses\Output\OutputCompaction;
 use OpenAI\Responses\Responses\Output\OutputComputerToolCall;
 use OpenAI\Responses\Responses\Output\OutputCustomToolCall;
+use OpenAI\Responses\Responses\Output\OutputCustomToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputFileSearchToolCall;
 use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputImageGenerationToolCall;
 use OpenAI\Responses\Responses\Output\OutputLocalShellCall;
 use OpenAI\Responses\Responses\Output\OutputMcpApprovalRequest;
 use OpenAI\Responses\Responses\Output\OutputMcpCall;
 use OpenAI\Responses\Responses\Output\OutputMcpListTools;
 use OpenAI\Responses\Responses\Output\OutputMessage;
+use OpenAI\Responses\Responses\Output\OutputProgram;
+use OpenAI\Responses\Responses\Output\OutputProgramOutput;
 use OpenAI\Responses\Responses\Output\OutputReasoning;
+use OpenAI\Responses\Responses\Output\OutputShellCall;
+use OpenAI\Responses\Responses\Output\OutputShellCallOutput;
 use OpenAI\Responses\Responses\Output\OutputToolSearchCall;
 use OpenAI\Responses\Responses\Output\OutputToolSearchOutput;
 use OpenAI\Responses\Responses\Output\OutputWebSearchToolCall;
+use OpenAI\Responses\Responses\Tool\ApplyPatchTool;
 use OpenAI\Responses\Responses\Tool\CodeInterpreterTool;
+use OpenAI\Responses\Responses\Tool\ComputerTool;
 use OpenAI\Responses\Responses\Tool\ComputerUseTool;
 use OpenAI\Responses\Responses\Tool\CustomTool;
 use OpenAI\Responses\Responses\Tool\FileSearchTool;
 use OpenAI\Responses\Responses\Tool\FunctionTool;
 use OpenAI\Responses\Responses\Tool\ImageGenerationTool;
+use OpenAI\Responses\Responses\Tool\LocalShellTool;
 use OpenAI\Responses\Responses\Tool\NamespaceTool;
+use OpenAI\Responses\Responses\Tool\ProgrammaticToolCallingTool;
 use OpenAI\Responses\Responses\Tool\RemoteMcpTool;
+use OpenAI\Responses\Responses\Tool\ShellTool;
 use OpenAI\Responses\Responses\Tool\ToolSearchTool;
 use OpenAI\Responses\Responses\Tool\WebSearchTool;
+use OpenAI\Responses\Responses\ToolChoice\AllowedToolsToolChoice;
+use OpenAI\Responses\Responses\ToolChoice\CustomToolChoice;
 use OpenAI\Responses\Responses\ToolChoice\FunctionToolChoice;
 use OpenAI\Responses\Responses\ToolChoice\HostedToolChoice;
+use OpenAI\Responses\Responses\ToolChoice\McpToolChoice;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
 /**
@@ -105,7 +125,7 @@ final class CreateResponse implements ResponseContract, ResponseHasMetaInformati
         public readonly bool $store,
         public readonly ?float $temperature,
         public readonly ?CreateResponseFormat $text,
-        public readonly string|FunctionToolChoice|HostedToolChoice $toolChoice,
+        public readonly string|AllowedToolsToolChoice|CustomToolChoice|FunctionToolChoice|HostedToolChoice|McpToolChoice $toolChoice,
         public readonly array $tools,
         public readonly ?int $topLogProbs,
         public readonly ?float $topP,
@@ -196,7 +216,7 @@ final class CreateResponse implements ResponseContract, ResponseHasMetaInformati
             'metadata' => $this->metadata ?? [],
             'model' => $this->model,
             'output' => array_map(
-                fn (OutputMessage|OutputComputerToolCall|OutputFileSearchToolCall|OutputWebSearchToolCall|OutputFunctionToolCall|OutputReasoning|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCodeInterpreterToolCall|OutputLocalShellCall|OutputCustomToolCall|OutputToolSearchCall|OutputToolSearchOutput|OutputCompaction $output): array => $output->toArray(),
+                fn (ComputerToolCallOutput|LocalShellCallOutput|McpApprovalResponse|OutputAdditionalTools|OutputApplyPatchCall|OutputApplyPatchCallOutput|OutputCustomToolCallOutput|OutputFunctionToolCallOutput|OutputMessage|OutputComputerToolCall|OutputFileSearchToolCall|OutputWebSearchToolCall|OutputFunctionToolCall|OutputProgram|OutputProgramOutput|OutputReasoning|OutputShellCall|OutputShellCallOutput|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCodeInterpreterToolCall|OutputLocalShellCall|OutputCustomToolCall|OutputToolSearchCall|OutputToolSearchOutput|OutputCompaction $output): array => $output->toArray(),
                 $this->output
             ),
             'parallel_tool_calls' => $this->parallelToolCalls,
@@ -213,7 +233,7 @@ final class CreateResponse implements ResponseContract, ResponseHasMetaInformati
                 ? $this->toolChoice
                 : $this->toolChoice->toArray(),
             'tools' => array_map(
-                fn (ComputerUseTool|FileSearchTool|FunctionTool|WebSearchTool|ImageGenerationTool|RemoteMcpTool|CodeInterpreterTool|ToolSearchTool|NamespaceTool|CustomTool $tool): array => $tool->toArray(),
+                fn (ApplyPatchTool|ComputerTool|ComputerUseTool|FileSearchTool|FunctionTool|WebSearchTool|ImageGenerationTool|LocalShellTool|RemoteMcpTool|CodeInterpreterTool|ShellTool|ToolSearchTool|NamespaceTool|CustomTool|ProgrammaticToolCallingTool $tool): array => $tool->toArray(),
                 $this->tools
             ),
             'top_logprobs' => $this->topLogProbs,
