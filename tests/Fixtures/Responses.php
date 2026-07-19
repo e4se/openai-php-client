@@ -575,7 +575,6 @@ function outputComputerToolCallGa(): array
     return [
         'type' => 'computer_call',
         'call_id' => 'call_ga_computer_123',
-        'id' => 'cu_ga_123',
         'actions' => [
             [
                 'button' => 'left',
@@ -588,7 +587,6 @@ function outputComputerToolCallGa(): array
                 'type' => 'keypress',
             ],
         ],
-        'pending_safety_checks' => [],
         'status' => 'completed',
     ];
 }
@@ -901,6 +899,23 @@ function outputShellCallProgrammatic(): array
         ],
         'caller' => programmaticToolCallCaller(),
         'created_by' => 'actor_shell',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputShellCall(): array
+{
+    return [
+        'action' => [
+            'commands' => ['ls -l'],
+            'timeout_ms' => 120000,
+            'max_output_length' => 4096,
+        ],
+        'call_id' => 'call_shell_documented',
+        'status' => 'in_progress',
+        'type' => 'shell_call',
     ];
 }
 

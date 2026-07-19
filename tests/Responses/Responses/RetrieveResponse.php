@@ -210,6 +210,7 @@ test('computer and MCP output items plus current hosted tools', function () {
 test('programmatic shell and apply patch variants', function () {
     $payload = retrieveResponseResource();
     $payload['output'] = [
+        outputShellCall(),
         outputShellCallProgrammatic(),
         outputApplyPatchCallProgrammatic(),
     ];
@@ -222,7 +223,9 @@ test('programmatic shell and apply patch variants', function () {
 
     expect($response->output)
         ->{0}->toBeInstanceOf(OutputShellCall::class)
-        ->{1}->toBeInstanceOf(OutputApplyPatchCall::class);
+        ->{0}->id->toBeNull()
+        ->{1}->toBeInstanceOf(OutputShellCall::class)
+        ->{2}->toBeInstanceOf(OutputApplyPatchCall::class);
 
     expect($response->toArray()['output'])->toBe($payload['output']);
     expect($response->toArray()['tools'])->toBe($payload['tools']);

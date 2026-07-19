@@ -419,6 +419,7 @@ test('programmatic tool result items with content array outputs', function () {
 test('programmatic shell and apply patch variants', function () {
     $payload = createResponseResource();
     $payload['output'] = [
+        outputShellCall(),
         outputShellCallProgrammatic(),
         outputShellCallOutputProgrammatic(),
         outputApplyPatchCallProgrammatic(),
@@ -437,10 +438,12 @@ test('programmatic shell and apply patch variants', function () {
 
     expect($response->output)
         ->{0}->toBeInstanceOf(OutputShellCall::class)
-        ->{1}->toBeInstanceOf(OutputShellCallOutput::class)
-        ->{2}->toBeInstanceOf(OutputApplyPatchCall::class)
-        ->{3}->toBeInstanceOf(OutputApplyPatchCallOutput::class)
-        ->{5}->toBeInstanceOf(LocalShellCallOutput::class);
+        ->{0}->id->toBeNull()
+        ->{1}->toBeInstanceOf(OutputShellCall::class)
+        ->{2}->toBeInstanceOf(OutputShellCallOutput::class)
+        ->{3}->toBeInstanceOf(OutputApplyPatchCall::class)
+        ->{4}->toBeInstanceOf(OutputApplyPatchCallOutput::class)
+        ->{6}->toBeInstanceOf(LocalShellCallOutput::class);
 
     expect($response->tools)
         ->{0}->toBeInstanceOf(ShellTool::class)

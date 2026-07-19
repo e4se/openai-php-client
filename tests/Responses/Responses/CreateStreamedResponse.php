@@ -280,6 +280,7 @@ test('output item events accept programmatic tool families', function () {
         [outputToolSearchOutput(), OutputToolSearchOutput::class],
         [outputLocalShellCall(), OutputLocalShellCall::class],
         [localShellCallOutputItem(), LocalShellCallOutput::class],
+        [outputShellCall(), OutputShellCall::class],
         [outputShellCallProgrammatic(), OutputShellCall::class],
         [outputShellCallOutputProgrammatic(), OutputShellCallOutput::class],
         [outputApplyPatchCallProgrammatic(), OutputApplyPatchCall::class],
