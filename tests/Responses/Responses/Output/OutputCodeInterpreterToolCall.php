@@ -71,3 +71,17 @@ test('preserves empty outputs', function () {
     expect($response->outputs)->toBe([]);
     expect($response->toArray())->toBe($attributes);
 });
+
+test('preserves omitted code and outputs', function () {
+    $attributes = outputCodeInterpreterToolCall();
+    unset($attributes['code'], $attributes['outputs']);
+
+    $response = OutputCodeInterpreterToolCall::from($attributes);
+
+    expect($response)
+        ->code->toBeNull()
+        ->outputs->toBeNull();
+    expect(isset($response['code']))->toBeFalse();
+    expect(isset($response['outputs']))->toBeFalse();
+    expect($response->toArray())->toBe($attributes);
+});

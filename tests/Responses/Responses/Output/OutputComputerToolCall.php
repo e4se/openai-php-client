@@ -1,7 +1,11 @@
 <?php
 
 use OpenAI\Responses\Responses\Output\ComputerAction\OutputComputerActionClick;
+use OpenAI\Responses\Responses\Output\ComputerAction\OutputComputerActionDoubleClick;
+use OpenAI\Responses\Responses\Output\ComputerAction\OutputComputerActionDrag;
 use OpenAI\Responses\Responses\Output\ComputerAction\OutputComputerActionKeyPress;
+use OpenAI\Responses\Responses\Output\ComputerAction\OutputComputerActionMove;
+use OpenAI\Responses\Responses\Output\ComputerAction\OutputComputerActionScroll;
 use OpenAI\Responses\Responses\Output\OutputComputerToolCall;
 
 test('from', function () {
@@ -42,4 +46,31 @@ test('hydrates and serializes GA batched actions', function () {
         ->actions->{1}->toBeInstanceOf(OutputComputerActionKeyPress::class);
 
     expect($response->toArray())->toBe(outputComputerToolCallGa());
+});
+
+test('preserves modifier keys on batched mouse actions', function () {
+    $attributes = outputComputerToolCallGa();
+    $attributes['actions'] = [
+        ['button' => 'left', 'type' => 'click', 'x' => 10, 'y' => 20, 'keys' => ['CTRL']],
+        ['type' => 'double_click', 'x' => 30.0, 'y' => 40.0, 'keys' => ['SHIFT']],
+        ['path' => [['x' => 50, 'y' => 60], ['x' => 70, 'y' => 80]], 'type' => 'drag', 'keys' => ['ALT']],
+        ['type' => 'move', 'x' => 90, 'y' => 100, 'keys' => ['META']],
+        ['scroll_x' => 0, 'scroll_y' => 120, 'type' => 'scroll', 'x' => 110, 'y' => 120, 'keys' => ['CTRL', 'SHIFT']],
+    ];
+
+    $response = OutputComputerToolCall::from($attributes);
+
+    expect($response->actions)
+        ->{0}->toBeInstanceOf(OutputComputerActionClick::class)
+        ->{0}->keys->toBe(['CTRL'])
+        ->{1}->toBeInstanceOf(OutputComputerActionDoubleClick::class)
+        ->{1}->keys->toBe(['SHIFT'])
+        ->{2}->toBeInstanceOf(OutputComputerActionDrag::class)
+        ->{2}->keys->toBe(['ALT'])
+        ->{3}->toBeInstanceOf(OutputComputerActionMove::class)
+        ->{3}->keys->toBe(['META'])
+        ->{4}->toBeInstanceOf(OutputComputerActionScroll::class)
+        ->{4}->keys->toBe(['CTRL', 'SHIFT']);
+
+    expect($response->toArray())->toBe($attributes);
 });

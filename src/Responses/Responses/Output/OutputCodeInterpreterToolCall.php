@@ -42,6 +42,8 @@ final class OutputCodeInterpreterToolCall implements ResponseContract
         public readonly string $status,
         public readonly string $type,
         public readonly string $containerId,
+        private readonly bool $hasCode,
+        private readonly bool $hasOutputs,
     ) {}
 
     /**
@@ -69,6 +71,8 @@ final class OutputCodeInterpreterToolCall implements ResponseContract
             status: $attributes['status'],
             type: $attributes['type'],
             containerId: $attributes['container_id'],
+            hasCode: array_key_exists('code', $attributes),
+            hasOutputs: array_key_exists('outputs', $attributes),
         );
     }
 
@@ -77,15 +81,28 @@ final class OutputCodeInterpreterToolCall implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
-            'code' => $this->code,
+        $result = [];
+
+        if ($this->hasCode) {
+            $result['code'] = $this->code;
+        }
+
+        $result += [
             'id' => $this->id,
-            'outputs' => $this->outputs !== null
+        ];
+
+        if ($this->hasOutputs) {
+            $result['outputs'] = $this->outputs !== null
                 ? array_map(static fn (CodeFileOutput|CodeImageOutput|CodeTextOutput $output): array => $output->toArray(), $this->outputs)
-                : null,
+                : null;
+        }
+
+        $result += [
             'status' => $this->status,
             'type' => $this->type,
             'container_id' => $this->containerId,
         ];
+
+        return $result;
     }
 }
