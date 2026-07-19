@@ -228,7 +228,7 @@ function listInputItemsResource(): array
             outputReasoning(),
             outputCodeInterpreterToolCall(),
             outputLocalShellCall(),
-            outputCustomToolCall(),
+            [...outputCustomToolCall(), 'status' => 'completed'],
         ],
         'first_id' => 'msg_67ccf190ca3881909d433c50b1f6357e087bb177ab789d5c',
         'last_id' => 'msg_67ccf190ca3881909d433c50b1f6357e087bb177ab789d5c',
@@ -296,14 +296,87 @@ function customToolCallOutputItem(): array
 /**
  * @return array<string, mixed>
  */
+function customToolCallOutputProgrammatic(): array
+{
+    return [
+        ...customToolCallOutputItem(),
+        'status' => 'completed',
+        'caller' => programmaticToolCallCaller(),
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function functionToolCallOutputProgrammatic(): array
+{
+    return [
+        'call_id' => 'call_inventory_123',
+        'id' => 'fco_123',
+        'output' => '{"sku":"sku_123","available_units":42}',
+        'type' => 'function_call_output',
+        'status' => 'completed',
+        'caller' => programmaticToolCallCaller(),
+    ];
+}
+
+/**
+ * @return array<string, string>
+ */
+function programmaticToolCallCaller(): array
+{
+    return [
+        'type' => 'program',
+        'caller_id' => 'call_prog_123',
+    ];
+}
+
+/**
+ * @return array<string, string>
+ */
+function directToolCallCaller(): array
+{
+    return [
+        'type' => 'direct',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
 function mcpApprovalResponseItem(): array
 {
     return [
         'type' => 'mcp_approval_response',
-        'id' => 'mar_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c',
         'approval_request_id' => 'apr_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c',
         'approve' => true,
+        'id' => 'mar_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c',
         'reason' => null,
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function computerToolCallOutputItem(): array
+{
+    return [
+        'call_id' => 'call_computer_123',
+        'id' => 'computer_output_123',
+        'output' => [
+            'type' => 'computer_screenshot',
+            'image_url' => 'https://example.com/screenshot.png',
+        ],
+        'type' => 'computer_call_output',
+        'status' => 'completed',
+        'acknowledged_safety_checks' => [
+            [
+                'code' => 'malware',
+                'id' => 'safety_check_123',
+                'message' => 'The action was reviewed.',
+            ],
+        ],
+        'created_by' => 'actor_computer',
     ];
 }
 
@@ -490,6 +563,32 @@ function outputComputerToolCall(): array
                 'message' => 'Safety check message',
             ],
         ],
+        'status' => 'completed',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputComputerToolCallGa(): array
+{
+    return [
+        'type' => 'computer_call',
+        'call_id' => 'call_ga_computer_123',
+        'id' => 'cu_ga_computer_123',
+        'actions' => [
+            [
+                'button' => 'left',
+                'type' => 'click',
+                'x' => 117,
+                'y' => 123,
+            ],
+            [
+                'keys' => ['ENTER'],
+                'type' => 'keypress',
+            ],
+        ],
+        'pending_safety_checks' => [],
         'status' => 'completed',
     ];
 }
@@ -729,6 +828,166 @@ function outputCustomToolCall(): array
 /**
  * @return array<string, mixed>
  */
+function outputCustomToolCallProgrammatic(): array
+{
+    return [
+        ...outputCustomToolCall(),
+        'namespace' => 'inventory',
+        'caller' => programmaticToolCallCaller(),
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputProgram(): array
+{
+    return [
+        'type' => 'program',
+        'id' => 'prog_123',
+        'call_id' => 'call_prog_123',
+        'code' => "const [stock, demand] = await Promise.all([tools.get_inventory({ sku: 'sku_123' }), tools.get_demand({ sku: 'sku_123' })]); text(JSON.stringify({ sku: stock.sku, available_units: stock.available_units, requested_units: demand.requested_units, shortage_units: Math.max(demand.requested_units - stock.available_units, 0) }));",
+        'fingerprint' => 'opaque_replay_state',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputFunctionToolCallProgrammatic(): array
+{
+    return [
+        'arguments' => '{"sku":"sku_123"}',
+        'call_id' => 'call_inventory_123',
+        'name' => 'get_inventory',
+        'type' => 'function_call',
+        'id' => 'fc_123',
+        'namespace' => 'inventory',
+        'caller' => programmaticToolCallCaller(),
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputProgramOutput(): array
+{
+    return [
+        'type' => 'program_output',
+        'id' => 'prog_out_123',
+        'call_id' => 'call_prog_123',
+        'result' => '{"sku":"sku_123","available_units":42,"requested_units":31,"shortage_units":0}',
+        'status' => 'completed',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputShellCallProgrammatic(): array
+{
+    return [
+        'action' => [
+            'commands' => ['printf shell'],
+            'max_output_length' => 4096,
+            'timeout_ms' => 1000,
+        ],
+        'call_id' => 'call_shell_123',
+        'id' => 'sh_123',
+        'status' => 'completed',
+        'type' => 'shell_call',
+        'environment' => [
+            'type' => 'local',
+        ],
+        'caller' => programmaticToolCallCaller(),
+        'created_by' => 'actor_shell',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputShellCall(): array
+{
+    return [
+        'action' => [
+            'commands' => ['ls -l'],
+            'timeout_ms' => 120000,
+            'max_output_length' => 4096,
+        ],
+        'call_id' => 'call_shell_documented',
+        'id' => 'sh_documented',
+        'status' => 'in_progress',
+        'type' => 'shell_call',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputShellCallOutputProgrammatic(): array
+{
+    return [
+        'call_id' => 'call_shell_123',
+        'id' => 'sh_out_123',
+        'output' => [
+            [
+                'outcome' => [
+                    'type' => 'exit',
+                    'exit_code' => 0,
+                ],
+                'stderr' => '',
+                'stdout' => 'shell',
+                'created_by' => 'actor_shell',
+            ],
+        ],
+        'status' => 'completed',
+        'type' => 'shell_call_output',
+        'max_output_length' => 4096,
+        'caller' => programmaticToolCallCaller(),
+        'created_by' => 'actor_shell',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputApplyPatchCallProgrammatic(): array
+{
+    return [
+        'call_id' => 'call_patch_123',
+        'id' => 'patch_123',
+        'operation' => [
+            'type' => 'update_file',
+            'diff' => "@@ -1 +1 @@\n-old\n+new",
+            'path' => 'README.md',
+        ],
+        'status' => 'completed',
+        'type' => 'apply_patch_call',
+        'caller' => programmaticToolCallCaller(),
+        'created_by' => 'actor_patch',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputApplyPatchCallOutputProgrammatic(): array
+{
+    return [
+        'call_id' => 'call_patch_123',
+        'id' => 'patch_out_123',
+        'status' => 'completed',
+        'type' => 'apply_patch_call_output',
+        'output' => 'Done!',
+        'caller' => programmaticToolCallCaller(),
+        'created_by' => 'actor_patch',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
 function outputImageGenerationToolCall(): array
 {
     return [
@@ -794,9 +1053,7 @@ function toolRemoteMcp(): array
         'require_approval' => null,
         'allowed_tools' => null,
         'headers' => null,
-        'connector_id' => null,
-        'authorization' => null,
-        'server_description' => null,
+        'defer_loading' => true,
     ];
 }
 
@@ -818,7 +1075,6 @@ function toolRemoveMcpRequireApproval(): array
         ],
         'allowed_tools' => null,
         'headers' => null,
-        'server_description' => null,
     ];
 }
 
@@ -830,13 +1086,11 @@ function toolConnectorMcp(): array
     return [
         'type' => 'mcp',
         'server_label' => 'Dropbox',
-        'server_url' => null,
         'require_approval' => 'never',
         'allowed_tools' => null,
         'headers' => null,
         'connector_id' => 'connector_dropbox',
         'authorization' => '<redacted>',
-        'server_description' => null,
     ];
 }
 
@@ -948,6 +1202,84 @@ function toolToolSearch(): array
 /**
  * @return array<string, mixed>
  */
+function toolFunctionProgrammatic(): array
+{
+    return [
+        'name' => 'get_inventory',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'sku' => ['type' => 'string'],
+            ],
+            'required' => ['sku'],
+            'additionalProperties' => false,
+        ],
+        'strict' => true,
+        'type' => 'function',
+        'description' => 'Return the current inventory for a SKU.',
+        'defer_loading' => true,
+        'allowed_callers' => ['programmatic'],
+        'output_schema' => [
+            'type' => 'object',
+            'properties' => [
+                'sku' => ['type' => 'string'],
+                'available_units' => ['type' => 'number'],
+            ],
+            'required' => ['sku', 'available_units'],
+            'additionalProperties' => false,
+        ],
+    ];
+}
+
+/**
+ * @return array<string, string>
+ */
+function toolProgrammaticToolCalling(): array
+{
+    return [
+        'type' => 'programmatic_tool_calling',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function toolApplyPatchProgrammatic(): array
+{
+    return [
+        'type' => 'apply_patch',
+        'allowed_callers' => ['programmatic'],
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function toolShellProgrammatic(): array
+{
+    return [
+        'type' => 'shell',
+        'allowed_callers' => ['programmatic'],
+        'environment' => [
+            'type' => 'container_auto',
+            'file_ids' => ['file_123'],
+        ],
+    ];
+}
+
+/**
+ * @return array<string, string>
+ */
+function toolLocalShell(): array
+{
+    return [
+        'type' => 'local_shell',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
 function outputToolSearchCall(): array
 {
     return [
@@ -975,11 +1307,25 @@ function outputToolSearchOutput(): array
             [
                 'type' => 'web_search',
                 'search_context_size' => 'low',
-                'user_location' => null,
             ],
         ],
         'type' => 'tool_search_output',
         'created_by' => 'user_123',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function outputAdditionalTools(): array
+{
+    return [
+        'id' => 'at_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c',
+        'role' => 'developer',
+        'tools' => [
+            toolFunctionProgrammatic(),
+        ],
+        'type' => 'additional_tools',
     ];
 }
 

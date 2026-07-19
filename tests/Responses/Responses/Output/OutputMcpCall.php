@@ -16,13 +16,14 @@ test('from', function () {
         ->type->toBe('mcp_call')
         ->approvalRequestId->toBeNull()
         ->error->toBeNull()
-        ->output->toBeNull();
+        ->output->toBeNull()
+        ->status->toBeNull();
 });
 
 test('from without optional keys', function () {
     $attributes = outputMcpCall();
 
-    unset($attributes['approval_request_id'], $attributes['output']);
+    unset($attributes['approval_request_id'], $attributes['error'], $attributes['output']);
 
     set_error_handler(static fn (int $errno, string $errstr): bool => throw new ErrorException($errstr), E_WARNING);
 
@@ -35,7 +36,20 @@ test('from without optional keys', function () {
     expect($response)
         ->toBeInstanceOf(OutputMcpCall::class)
         ->approvalRequestId->toBeNull()
+        ->error->toBeNull()
         ->output->toBeNull();
+
+    expect($response->toArray())->toBe($attributes);
+});
+
+test('preserves status', function () {
+    $attributes = outputMcpCall();
+    $attributes['status'] = 'calling';
+
+    $response = OutputMcpCall::from($attributes);
+
+    expect($response->status)->toBe('calling');
+    expect($response->toArray())->toBe($attributes);
 });
 
 test('from error as http object', function () {
@@ -50,7 +64,8 @@ test('from error as http object', function () {
 });
 
 test('from error as string', function () {
-    $response = OutputMcpCall::from(outputMcpErrorCallString());
+    $attributes = outputMcpErrorCallString();
+    $response = OutputMcpCall::from($attributes);
 
     expect($response)
         ->toBeInstanceOf(OutputMcpCall::class)
@@ -59,6 +74,7 @@ test('from error as string', function () {
         ->code->toBe('unknown_error')
         ->message->toBe('Missing or invalid authorization token.');
 
+    expect($response->toArray()['error'])->toBe($attributes['error']);
 });
 
 test('from error as mcp tool execution error', function () {

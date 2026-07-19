@@ -11,7 +11,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
 /**
  * @phpstan-import-type McpToolNamesFilterType from McpToolNamesFilter
  *
- * @phpstan-type RemoteMcpToolType array{type: 'mcp', server_label: string, authorization: string|null, connector_id?: string|null, server_url: string|null, require_approval: 'never'|'always'|array<'never'|'always', McpToolNamesFilterType>|null, allowed_tools: array<int, string>|McpToolNamesFilterType|null, headers: array<string, string>|null, server_description?: string|null}
+ * @phpstan-type RemoteMcpToolType array{type: 'mcp', server_label: string, authorization?: string|null, connector_id?: string|null, server_url?: string|null, tunnel_id?: string|null, require_approval?: 'never'|'always'|array{never?: McpToolNamesFilterType, always?: McpToolNamesFilterType}|null, allowed_tools?: array<int, string>|McpToolNamesFilterType|null, headers?: array<string, string>|null, server_description?: string|null, defer_loading?: bool, allowed_callers?: array<int, 'direct'|'programmatic'>}
  *
  * @implements ResponseContract<RemoteMcpToolType>
  */
@@ -26,9 +26,10 @@ final class RemoteMcpTool implements ResponseContract
 
     /**
      * @param  'mcp'  $type
-     * @param  'never'|'always'|array<'never'|'always', McpToolNamesFilter>|null  $requireApproval
+     * @param  'never'|'always'|array{never?: McpToolNamesFilter, always?: McpToolNamesFilter}|null  $requireApproval
      * @param  array<int, string>|McpToolNamesFilter|null  $allowedTools
      * @param  array<string, string>|null  $headers
+     * @param  array<int, 'direct'|'programmatic'>|null  $allowedCallers
      */
     private function __construct(
         public readonly string $type,
@@ -38,8 +39,11 @@ final class RemoteMcpTool implements ResponseContract
         public readonly array|McpToolNamesFilter|null $allowedTools = null,
         public readonly ?array $headers = null,
         public readonly ?string $connectorId = null,
+        public readonly ?string $tunnelId = null,
         public readonly ?string $authorization = null,
         public readonly ?string $serverDescription = null,
+        public readonly ?bool $deferLoading = null,
+        public readonly ?array $allowedCallers = null,
     ) {}
 
     /**
@@ -58,8 +62,15 @@ final class RemoteMcpTool implements ResponseContract
         }
 
         $allowedTools = $attributes['allowed_tools'] ?? null;
-        if ($allowedTools !== null && isset($allowedTools['tool_names']) && is_array($allowedTools['tool_names'])) {
-            $allowedTools = McpToolNamesFilter::from($allowedTools);
+        if (is_array($allowedTools) && (array_key_exists('tool_names', $allowedTools) || array_key_exists('read_only', $allowedTools))) {
+            $allowedTools = McpToolNamesFilter::from([
+                'tool_names' => isset($allowedTools['tool_names']) && is_array($allowedTools['tool_names'])
+                    ? $allowedTools['tool_names']
+                    : null,
+                'read_only' => isset($allowedTools['read_only']) && is_bool($allowedTools['read_only'])
+                    ? $allowedTools['read_only']
+                    : null,
+            ]);
         }
 
         return new self(
@@ -70,8 +81,11 @@ final class RemoteMcpTool implements ResponseContract
             allowedTools: $allowedTools, // @phpstan-ignore-line
             headers: $attributes['headers'] ?? null,
             connectorId: $attributes['connector_id'] ?? null,
+            tunnelId: $attributes['tunnel_id'] ?? null,
             authorization: $attributes['authorization'] ?? null,
             serverDescription: $attributes['server_description'] ?? null,
+            deferLoading: $attributes['defer_loading'] ?? null,
+            allowedCallers: $attributes['allowed_callers'] ?? null,
         );
     }
 
@@ -92,16 +106,43 @@ final class RemoteMcpTool implements ResponseContract
             $allowedTools = $allowedTools->toArray();
         }
 
-        return [
+        $result = [
             'type' => $this->type,
             'server_label' => $this->serverLabel,
-            'server_url' => $this->serverUrl,
-            'require_approval' => $requireApproval,
-            'allowed_tools' => $allowedTools,
-            'headers' => $this->headers,
-            'connector_id' => $this->connectorId,
-            'authorization' => $this->authorization,
-            'server_description' => $this->serverDescription,
         ];
+
+        if ($this->serverUrl !== null) {
+            $result['server_url'] = $this->serverUrl;
+        }
+
+        $result['require_approval'] = $requireApproval;
+        $result['allowed_tools'] = $allowedTools;
+        $result['headers'] = $this->headers;
+
+        if ($this->connectorId !== null) {
+            $result['connector_id'] = $this->connectorId;
+        }
+
+        if ($this->authorization !== null) {
+            $result['authorization'] = $this->authorization;
+        }
+
+        if ($this->serverDescription !== null) {
+            $result['server_description'] = $this->serverDescription;
+        }
+
+        if ($this->deferLoading !== null) {
+            $result['defer_loading'] = $this->deferLoading;
+        }
+
+        if ($this->tunnelId !== null) {
+            $result['tunnel_id'] = $this->tunnelId;
+        }
+
+        if ($this->allowedCallers !== null) {
+            $result['allowed_callers'] = $this->allowedCallers;
+        }
+
+        return $result;
     }
 }

@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace OpenAI\Responses\Responses\Input;
 
+use OpenAI\Actions\Responses\ToolCallCallerObjects;
 use OpenAI\Contracts\ResponseContract;
 use OpenAI\Responses\Concerns\ArrayAccessible;
+use OpenAI\Responses\Responses\DirectToolCallCaller;
+use OpenAI\Responses\Responses\ProgrammaticToolCallCaller;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
 /**
- * @phpstan-type FunctionToolCallOutputType array{call_id: string, id: string, output: string, type: 'function_call_output', status: 'in_progress'|'completed'|'incompleted'}
+ * @phpstan-import-type DirectToolCallCallerType from DirectToolCallCaller
+ * @phpstan-import-type ProgrammaticToolCallCallerType from ProgrammaticToolCallCaller
+ *
+ * @phpstan-type FunctionToolCallOutputType array{call_id: string, output: string|array<int, array<string, mixed>>, type: 'function_call_output', id?: string, status?: 'in_progress'|'completed'|'incomplete', caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType}
  *
  * @implements ResponseContract<FunctionToolCallOutputType>
  */
@@ -24,14 +30,16 @@ final class FunctionToolCallOutput implements ResponseContract
 
     /**
      * @param  'function_call_output'  $type
-     * @param  'in_progress'|'completed'|'incompleted'  $status
+     * @param  'in_progress'|'completed'|'incomplete'|null  $status
+     * @param  array<int, array<string, mixed>>|string  $output
      */
     private function __construct(
         public readonly string $callId,
-        public readonly string $id,
-        public readonly string $output,
+        public readonly ?string $id,
+        public readonly array|string $output,
         public readonly string $type,
-        public readonly string $status,
+        public readonly ?string $status,
+        public readonly DirectToolCallCaller|ProgrammaticToolCallCaller|null $caller,
     ) {}
 
     /**
@@ -41,10 +49,13 @@ final class FunctionToolCallOutput implements ResponseContract
     {
         return new self(
             callId: $attributes['call_id'],
-            id: $attributes['id'],
+            id: $attributes['id'] ?? null,
             output: $attributes['output'],
             type: $attributes['type'],
-            status: $attributes['status'],
+            status: $attributes['status'] ?? null,
+            caller: isset($attributes['caller'])
+                ? ToolCallCallerObjects::parse($attributes['caller'])
+                : null,
         );
     }
 
@@ -53,12 +64,29 @@ final class FunctionToolCallOutput implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
+        $result = [
             'call_id' => $this->callId,
-            'id' => $this->id,
             'output' => $this->output,
             'type' => $this->type,
-            'status' => $this->status,
         ];
+
+        if ($this->id !== null) {
+            $result = [
+                'call_id' => $this->callId,
+                'id' => $this->id,
+                'output' => $this->output,
+                'type' => $this->type,
+            ];
+        }
+
+        if ($this->status !== null) {
+            $result['status'] = $this->status;
+        }
+
+        if ($this->caller !== null) {
+            $result['caller'] = $this->caller->toArray();
+        }
+
+        return $result;
     }
 }

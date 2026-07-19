@@ -10,7 +10,8 @@ test('from', function () {
         ->toBeInstanceOf(RemoteMcpTool::class)
         ->type->toBe('mcp')
         ->serverLabel->toBe('My test MCP server')
-        ->serverUrl->toBe('https://server.example.com/mcp');
+        ->serverUrl->toBe('https://server.example.com/mcp')
+        ->deferLoading->toBeTrue();
 });
 
 test('from results', function () {
@@ -77,4 +78,74 @@ test('to array', function () {
     expect($response->toArray())
         ->toBeArray()
         ->toBe(toolRemoteMcp());
+});
+
+test('preserves programmatic configuration', function () {
+    $attributes = toolRemoteMcp();
+    $attributes['allowed_callers'] = ['programmatic'];
+
+    $response = RemoteMcpTool::from($attributes);
+
+    expect($response->allowedCallers)
+        ->toBe(['programmatic']);
+
+    expect($response->deferLoading)
+        ->toBeTrue();
+
+    expect($response->toArray())
+        ->toBe($attributes);
+});
+
+test('preserves secure tunnel id', function () {
+    $attributes = toolRemoteMcp();
+    unset($attributes['server_url']);
+    $attributes['tunnel_id'] = 'tunnel_123';
+
+    $response = RemoteMcpTool::from($attributes);
+
+    expect($response)
+        ->serverUrl->toBeNull()
+        ->tunnelId->toBe('tunnel_123');
+
+    expect($response->toArray())->toBe($attributes);
+});
+
+test('omits non-nullable MCP fields when absent', function () {
+    $attributes = [
+        'type' => 'mcp',
+        'server_label' => 'Dropbox',
+        'require_approval' => null,
+        'allowed_tools' => null,
+        'headers' => null,
+        'connector_id' => 'connector_dropbox',
+    ];
+
+    $response = RemoteMcpTool::from($attributes);
+
+    expect($response->toArray())
+        ->toBe($attributes)
+        ->not->toHaveKeys([
+            'server_url',
+            'authorization',
+            'server_description',
+            'tunnel_id',
+        ]);
+});
+
+test('preserves read only approval filter', function () {
+    $attributes = toolRemoteMcp();
+    $attributes['require_approval'] = [
+        'never' => [
+            'read_only' => true,
+        ],
+    ];
+
+    $response = RemoteMcpTool::from($attributes);
+
+    expect($response->requireApproval['never'])
+        ->toBeInstanceOf(McpToolNamesFilter::class)
+        ->toolNames->toBeNull()
+        ->readOnly->toBeTrue();
+
+    expect($response->toArray())->toBe($attributes);
 });

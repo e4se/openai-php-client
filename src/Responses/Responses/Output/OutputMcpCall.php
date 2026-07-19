@@ -14,7 +14,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type ErrorType from GenericResponseError
  * @phpstan-import-type McpErrorType from McpGenericResponseError
  *
- * @phpstan-type OutputMcpCallType array{id: string, server_label: string, type: 'mcp_call', approval_request_id: ?string, arguments: string, error: string|McpErrorType|ErrorType|null, name: string, output: ?string}
+ * @phpstan-type OutputMcpCallType array{id: string, server_label: string, type: 'mcp_call', approval_request_id?: string|null, arguments: string, error?: string|McpErrorType|ErrorType|null, name: string, output?: string|null, status?: 'in_progress'|'completed'|'incomplete'|'calling'|'failed'|null}
  *
  * @implements ResponseContract<OutputMcpCallType>
  */
@@ -29,6 +29,8 @@ final class OutputMcpCall implements ResponseContract
 
     /**
      * @param  'mcp_call'  $type
+     * @param  'in_progress'|'completed'|'incomplete'|'calling'|'failed'|null  $status
+     * @param  string|McpErrorType|ErrorType|null  $serializedError
      */
     private function __construct(
         public readonly string $id,
@@ -39,6 +41,12 @@ final class OutputMcpCall implements ResponseContract
         public readonly ?string $approvalRequestId = null,
         public readonly McpGenericResponseError|GenericResponseError|null $error = null,
         public readonly ?string $output = null,
+        public readonly ?string $status = null,
+        private readonly string|array|null $serializedError = null,
+        private readonly bool $hasApprovalRequestId = false,
+        private readonly bool $hasError = false,
+        private readonly bool $hasOutput = false,
+        private readonly bool $hasStatus = false,
     ) {}
 
     /**
@@ -72,6 +80,12 @@ final class OutputMcpCall implements ResponseContract
             approvalRequestId: $attributes['approval_request_id'] ?? null,
             error: $errorType,
             output: $attributes['output'] ?? null,
+            status: $attributes['status'] ?? null,
+            serializedError: $attributes['error'] ?? null,
+            hasApprovalRequestId: array_key_exists('approval_request_id', $attributes),
+            hasError: array_key_exists('error', $attributes),
+            hasOutput: array_key_exists('output', $attributes),
+            hasStatus: array_key_exists('status', $attributes),
         );
     }
 
@@ -80,17 +94,30 @@ final class OutputMcpCall implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
+        $result = [
             'id' => $this->id,
             'server_label' => $this->serverLabel,
             'type' => $this->type,
             'arguments' => $this->arguments,
             'name' => $this->name,
-            'approval_request_id' => $this->approvalRequestId,
-            'error' => $this->error instanceof GenericResponseError || $this->error instanceof McpGenericResponseError
-                ? $this->error->toArray()
-                : $this->error,
-            'output' => $this->output,
         ];
+
+        if ($this->hasApprovalRequestId) {
+            $result['approval_request_id'] = $this->approvalRequestId;
+        }
+
+        if ($this->hasError) {
+            $result['error'] = $this->serializedError;
+        }
+
+        if ($this->hasOutput) {
+            $result['output'] = $this->output;
+        }
+
+        if ($this->hasStatus) {
+            $result['status'] = $this->status;
+        }
+
+        return $result;
     }
 }

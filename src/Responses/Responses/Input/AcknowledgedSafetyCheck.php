@@ -9,7 +9,7 @@ use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
 /**
- * @phpstan-type AcknowledgedSafetyCheckType array{code: string, id: string, message: string}
+ * @phpstan-type AcknowledgedSafetyCheckType array{code?: string|null, id: string, message?: string|null}
  *
  * @implements ResponseContract<AcknowledgedSafetyCheckType>
  */
@@ -23,9 +23,9 @@ final class AcknowledgedSafetyCheck implements ResponseContract
     use Fakeable;
 
     private function __construct(
-        public readonly string $code,
+        public readonly ?string $code,
         public readonly string $id,
-        public readonly string $message,
+        public readonly ?string $message,
     ) {}
 
     /**
@@ -34,9 +34,9 @@ final class AcknowledgedSafetyCheck implements ResponseContract
     public static function from(array $attributes): self
     {
         return new self(
-            code: $attributes['code'],
+            code: $attributes['code'] ?? null,
             id: $attributes['id'],
-            message: $attributes['message'],
+            message: $attributes['message'] ?? null,
         );
     }
 
@@ -45,10 +45,16 @@ final class AcknowledgedSafetyCheck implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
-            'code' => $this->code,
-            'id' => $this->id,
-            'message' => $this->message,
-        ];
+        $result = ['id' => $this->id];
+
+        if ($this->code !== null) {
+            $result = ['code' => $this->code, ...$result];
+        }
+
+        if ($this->message !== null) {
+            $result['message'] = $this->message;
+        }
+
+        return $result;
     }
 }

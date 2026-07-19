@@ -24,19 +24,18 @@ test('from without optional keys', function () {
     set_error_handler(static fn (int $errno, string $errstr): bool => throw new ErrorException($errstr), E_WARNING);
 
     try {
-        $response = WebSearchUserLocation::from([
-            'type' => 'approximate',
-            'country' => 'US',
-        ]);
+        $response = WebSearchUserLocation::from([]);
     } finally {
         restore_error_handler();
     }
 
     expect($response)
         ->toBeInstanceOf(WebSearchUserLocation::class)
-        ->type->toBe('approximate')
-        ->country->toBe('US')
+        ->type->toBeNull()
+        ->country->toBeNull()
         ->city->toBeNull()
         ->region->toBeNull()
         ->timezone->toBeNull();
+
+    expect($response->toArray())->toBe([]);
 });

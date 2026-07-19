@@ -9,7 +9,7 @@ use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
 /**
- * @phpstan-type ScrollType array{scroll_x: int, scroll_y: int, type: 'scroll', x: int, y: int}
+ * @phpstan-type ScrollType array{scroll_x: int, scroll_y: int, type: 'scroll', x: int, y: int, keys?: array<int, string>|null}
  *
  * @implements ResponseContract<ScrollType>
  */
@@ -23,9 +23,11 @@ final class OutputComputerActionScroll implements ResponseContract
     use Fakeable;
 
     /**
+     * @param  array<int, string>|null  $keys
      * @param  'scroll'  $type
      */
     private function __construct(
+        public readonly ?array $keys,
         public readonly int $scrollX,
         public readonly int $scrollY,
         public readonly string $type,
@@ -39,6 +41,7 @@ final class OutputComputerActionScroll implements ResponseContract
     public static function from(array $attributes): self
     {
         return new self(
+            keys: $attributes['keys'] ?? null,
             scrollX: $attributes['scroll_x'],
             scrollY: $attributes['scroll_y'],
             type: $attributes['type'],
@@ -52,12 +55,18 @@ final class OutputComputerActionScroll implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
+        $result = [
             'scroll_x' => $this->scrollX,
             'scroll_y' => $this->scrollY,
             'type' => $this->type,
             'x' => $this->x,
             'y' => $this->y,
         ];
+
+        if ($this->keys !== null) {
+            $result['keys'] = $this->keys;
+        }
+
+        return $result;
     }
 }

@@ -11,7 +11,8 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
 /**
  * @phpstan-import-type UserLocationType from WebSearchUserLocation
  *
- * @phpstan-type WebSearchToolType array{type: 'web_search'|'web_search_preview'|'web_search_preview_2025_03_11', search_context_size: 'low'|'medium'|'high', user_location: ?UserLocationType}
+ * @phpstan-type WebSearchFiltersType array{allowed_domains?: array<int, string>|null}
+ * @phpstan-type WebSearchToolType array{type: 'web_search'|'web_search_2025_08_26', filters?: WebSearchFiltersType|null, search_context_size?: 'low'|'medium'|'high'|null, user_location?: UserLocationType|null}
  *
  * @implements ResponseContract<WebSearchToolType>
  */
@@ -25,12 +26,14 @@ final class WebSearchTool implements ResponseContract
     use Fakeable;
 
     /**
-     * @param  'web_search'|'web_search_preview'|'web_search_preview_2025_03_11'  $type
-     * @param  'low'|'medium'|'high'  $searchContextSize
+     * @param  'web_search'|'web_search_2025_08_26'  $type
+     * @param  WebSearchFiltersType|null  $filters
+     * @param  'low'|'medium'|'high'|null  $searchContextSize
      */
     private function __construct(
         public readonly string $type,
-        public readonly string $searchContextSize,
+        public readonly ?array $filters,
+        public readonly ?string $searchContextSize,
         public readonly ?WebSearchUserLocation $userLocation,
     ) {}
 
@@ -41,7 +44,8 @@ final class WebSearchTool implements ResponseContract
     {
         return new self(
             type: $attributes['type'],
-            searchContextSize: $attributes['search_context_size'],
+            filters: $attributes['filters'] ?? null,
+            searchContextSize: $attributes['search_context_size'] ?? null,
             userLocation: isset($attributes['user_location'])
                 ? WebSearchUserLocation::from($attributes['user_location'])
                 : null,
@@ -53,10 +57,22 @@ final class WebSearchTool implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
+        $result = [
             'type' => $this->type,
-            'search_context_size' => $this->searchContextSize,
-            'user_location' => $this->userLocation?->toArray(),
         ];
+
+        if ($this->filters !== null) {
+            $result['filters'] = $this->filters;
+        }
+
+        if ($this->searchContextSize !== null) {
+            $result['search_context_size'] = $this->searchContextSize;
+        }
+
+        if ($this->userLocation !== null) {
+            $result['user_location'] = $this->userLocation->toArray();
+        }
+
+        return $result;
     }
 }

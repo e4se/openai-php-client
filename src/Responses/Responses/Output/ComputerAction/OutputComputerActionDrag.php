@@ -11,7 +11,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
 /**
  * @phpstan-import-type DragPathType from OutputComputerDragPath
  *
- * @phpstan-type DragType array{path: array<int, DragPathType>, type: 'drag'}
+ * @phpstan-type DragType array{path: array<int, DragPathType>, type: 'drag', keys?: array<int, string>|null}
  *
  * @implements ResponseContract<DragType>
  */
@@ -26,10 +26,12 @@ final class OutputComputerActionDrag implements ResponseContract
 
     /**
      * @param  array<int, OutputComputerDragPath>  $path
+     * @param  array<int, string>|null  $keys
      * @param  'drag'  $type
      */
     private function __construct(
         public readonly array $path,
+        public readonly ?array $keys,
         public readonly string $type,
     ) {}
 
@@ -45,6 +47,7 @@ final class OutputComputerActionDrag implements ResponseContract
 
         return new self(
             path: $paths,
+            keys: $attributes['keys'] ?? null,
             type: $attributes['type'],
         );
     }
@@ -54,12 +57,18 @@ final class OutputComputerActionDrag implements ResponseContract
      */
     public function toArray(): array
     {
-        return [
+        $result = [
             'path' => array_map(
                 static fn (OutputComputerDragPath $path): array => $path->toArray(),
                 $this->path,
             ),
             'type' => $this->type,
         ];
+
+        if ($this->keys !== null) {
+            $result['keys'] = $this->keys;
+        }
+
+        return $result;
     }
 }
