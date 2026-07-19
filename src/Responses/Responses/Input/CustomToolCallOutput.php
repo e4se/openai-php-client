@@ -15,7 +15,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type DirectToolCallCallerType from DirectToolCallCaller
  * @phpstan-import-type ProgrammaticToolCallCallerType from ProgrammaticToolCallCaller
  *
- * @phpstan-type CustomToolCallOutputType array{call_id: string, output: string|array<int, array<string, mixed>>, type: 'custom_tool_call_output', id?: string|null, status?: 'in_progress'|'completed'|'incomplete', caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, created_by?: string|null}
+ * @phpstan-type CustomToolCallOutputType array{call_id: string, output: string|array<int, array<string, mixed>>, type: 'custom_tool_call_output', id?: string, caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType}
  *
  * @implements ResponseContract<CustomToolCallOutputType>
  */
@@ -30,7 +30,6 @@ final class CustomToolCallOutput implements ResponseContract
 
     /**
      * @param  'custom_tool_call_output'  $type
-     * @param  'in_progress'|'completed'|'incomplete'|null  $status
      * @param  array<int, array<string, mixed>>|string  $output
      */
     private function __construct(
@@ -38,9 +37,7 @@ final class CustomToolCallOutput implements ResponseContract
         public readonly array|string $output,
         public readonly string $type,
         public readonly ?string $id,
-        public readonly ?string $status,
         public readonly DirectToolCallCaller|ProgrammaticToolCallCaller|null $caller,
-        public readonly ?string $createdBy,
     ) {}
 
     /**
@@ -53,11 +50,9 @@ final class CustomToolCallOutput implements ResponseContract
             output: $attributes['output'],
             type: $attributes['type'],
             id: $attributes['id'] ?? null,
-            status: $attributes['status'] ?? null,
             caller: isset($attributes['caller'])
                 ? ToolCallCallerObjects::parse($attributes['caller'])
                 : null,
-            createdBy: $attributes['created_by'] ?? null,
         );
     }
 
@@ -81,16 +76,8 @@ final class CustomToolCallOutput implements ResponseContract
             ];
         }
 
-        if ($this->status !== null) {
-            $result['status'] = $this->status;
-        }
-
         if ($this->caller !== null) {
             $result['caller'] = $this->caller->toArray();
-        }
-
-        if ($this->createdBy !== null) {
-            $result['created_by'] = $this->createdBy;
         }
 
         return $result;

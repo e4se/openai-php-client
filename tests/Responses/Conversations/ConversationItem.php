@@ -2,14 +2,12 @@
 
 use OpenAI\Responses\Conversations\ConversationItem;
 use OpenAI\Responses\Conversations\Objects\Message;
-use OpenAI\Responses\Responses\Input\CustomToolCallOutput;
-use OpenAI\Responses\Responses\Input\FunctionToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputAdditionalTools;
 use OpenAI\Responses\Responses\Output\OutputApplyPatchCall;
 use OpenAI\Responses\Responses\Output\OutputApplyPatchCallOutput;
 use OpenAI\Responses\Responses\Output\OutputCompaction;
-use OpenAI\Responses\Responses\Output\OutputCustomToolCall;
-use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCallItem;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputShellCall;
 use OpenAI\Responses\Responses\Output\OutputShellCallOutput;
 use OpenAI\Responses\Responses\Output\OutputToolSearchCall;
@@ -56,25 +54,17 @@ test('programmatic shell and apply patch items', function () {
     }
 });
 
-test('tool items preserve provenance', function () {
+test('function items preserve required item fields and provenance', function () {
     $functionCall = outputFunctionToolCallProgrammatic();
+    $functionCall['status'] = 'completed';
     $functionCall['created_by'] = 'actor_function_call';
-
-    $customCall = outputCustomToolCallProgrammatic();
-    $customCall['status'] = 'completed';
-    $customCall['created_by'] = 'actor_custom_call';
 
     $functionOutput = functionToolCallOutputProgrammatic();
     $functionOutput['created_by'] = 'actor_function_output';
 
-    $customOutput = customToolCallOutputProgrammatic();
-    $customOutput['created_by'] = 'actor_custom_output';
-
     $items = [
-        [$functionCall, OutputFunctionToolCall::class],
-        [$customCall, OutputCustomToolCall::class],
-        [$functionOutput, FunctionToolCallOutput::class],
-        [$customOutput, CustomToolCallOutput::class],
+        [$functionCall, OutputFunctionToolCallItem::class],
+        [$functionOutput, OutputFunctionToolCallOutput::class],
     ];
 
     foreach ($items as [$attributes, $class]) {
@@ -102,6 +92,7 @@ test('custom calls and outputs accept missing ids', function () {
 
     $customOutput = customToolCallOutputProgrammatic();
     unset($customOutput['id']);
+    unset($customOutput['status']);
 
     foreach ([$customCall, $customOutput] as $attributes) {
         $response = ConversationItem::from($attributes);

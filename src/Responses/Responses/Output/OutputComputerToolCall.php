@@ -31,7 +31,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type PendingSafetyCheckType from OutputComputerPendingSafetyCheck
  *
  * @phpstan-type OutputComputerActionType ClickType|DoubleClickType|DragType|KeyPressType|MoveType|ScreenshotType|ScrollType|TypeType|WaitType
- * @phpstan-type OutputComputerToolCallType array{action?: OutputComputerActionType, actions?: array<int, OutputComputerActionType>, call_id: string, id?: string, pending_safety_checks?: array<int, PendingSafetyCheckType>, status: 'in_progress'|'completed'|'incomplete', type: 'computer_call'}
+ * @phpstan-type OutputComputerToolCallType array{action?: OutputComputerActionType, actions?: array<int, OutputComputerActionType>, call_id: string, id: string, pending_safety_checks: array<int, PendingSafetyCheckType>, status: 'in_progress'|'completed'|'incomplete', type: 'computer_call'}
  *
  * @implements ResponseContract<OutputComputerToolCallType>
  */
@@ -46,7 +46,7 @@ final class OutputComputerToolCall implements ResponseContract
 
     /**
      * @param  array<int, Click|DoubleClick|Drag|KeyPress|Move|Screenshot|Scroll|Type|Wait>|null  $actions
-     * @param  array<int, OutputComputerPendingSafetyCheck>|null  $pendingSafetyChecks
+     * @param  array<int, OutputComputerPendingSafetyCheck>  $pendingSafetyChecks
      * @param  'in_progress'|'completed'|'incomplete'  $status
      * @param  'computer_call'  $type
      */
@@ -54,8 +54,8 @@ final class OutputComputerToolCall implements ResponseContract
         public readonly Click|DoubleClick|Drag|KeyPress|Move|Screenshot|Scroll|Type|Wait|null $action,
         public readonly ?array $actions,
         public readonly string $callId,
-        public readonly ?string $id,
-        public readonly ?array $pendingSafetyChecks,
+        public readonly string $id,
+        public readonly array $pendingSafetyChecks,
         public readonly string $status,
         public readonly string $type,
     ) {}
@@ -73,18 +73,16 @@ final class OutputComputerToolCall implements ResponseContract
             ? array_map(self::parseAction(...), $attributes['actions'])
             : null;
 
-        $pendingSafetyChecks = isset($attributes['pending_safety_checks'])
-            ? array_map(
-                fn (array $safetyCheck): OutputComputerPendingSafetyCheck => OutputComputerPendingSafetyCheck::from($safetyCheck),
-                $attributes['pending_safety_checks']
-            )
-            : null;
+        $pendingSafetyChecks = array_map(
+            fn (array $safetyCheck): OutputComputerPendingSafetyCheck => OutputComputerPendingSafetyCheck::from($safetyCheck),
+            $attributes['pending_safety_checks']
+        );
 
         return new self(
             action: $action,
             actions: $actions,
             callId: $attributes['call_id'],
-            id: $attributes['id'] ?? null,
+            id: $attributes['id'],
             pendingSafetyChecks: $pendingSafetyChecks,
             status: $attributes['status'],
             type: $attributes['type'],
@@ -99,11 +97,8 @@ final class OutputComputerToolCall implements ResponseContract
         $result = [
             'type' => $this->type,
             'call_id' => $this->callId,
+            'id' => $this->id,
         ];
-
-        if ($this->id !== null) {
-            $result['id'] = $this->id;
-        }
 
         if ($this->action !== null) {
             $result['action'] = $this->action->toArray();
@@ -116,12 +111,10 @@ final class OutputComputerToolCall implements ResponseContract
             );
         }
 
-        if ($this->pendingSafetyChecks !== null) {
-            $result['pending_safety_checks'] = array_map(
-                fn (OutputComputerPendingSafetyCheck $safetyCheck): array => $safetyCheck->toArray(),
-                $this->pendingSafetyChecks,
-            );
-        }
+        $result['pending_safety_checks'] = array_map(
+            fn (OutputComputerPendingSafetyCheck $safetyCheck): array => $safetyCheck->toArray(),
+            $this->pendingSafetyChecks,
+        );
 
         $result['status'] = $this->status;
 

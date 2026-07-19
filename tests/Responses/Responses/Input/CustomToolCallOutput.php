@@ -29,19 +29,19 @@ it('to array', function () {
 
 it('preserves programmatic caller linkage', function () {
     $attributes = customToolCallOutputProgrammatic();
+    unset($attributes['status']);
     $response = CustomToolCallOutput::from($attributes);
 
     expect($response->caller)
         ->toBeInstanceOf(ProgrammaticToolCallCaller::class)
         ->callerId->toBe('call_prog_123');
 
-    expect($response->status)->toBe('completed');
-
     expect($response->toArray())->toBe($attributes);
 });
 
 it('preserves content array output', function () {
     $attributes = customToolCallOutputProgrammatic();
+    unset($attributes['status']);
     $attributes['output'] = [
         ['type' => 'input_text', 'text' => 'result'],
     ];
@@ -54,7 +54,7 @@ it('preserves content array output', function () {
 
 it('accepts conversation output items without an id', function () {
     $attributes = customToolCallOutputProgrammatic();
-    unset($attributes['id']);
+    unset($attributes['id'], $attributes['status']);
 
     $response = CustomToolCallOutput::from($attributes);
 

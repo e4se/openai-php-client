@@ -15,7 +15,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type DirectToolCallCallerType from DirectToolCallCaller
  * @phpstan-import-type ProgrammaticToolCallCallerType from ProgrammaticToolCallCaller
  *
- * @phpstan-type OutputFunctionToolCallType array{arguments: string, call_id: string, name: string, type: 'function_call', id?: string|null, status?: 'in_progress'|'completed'|'incomplete', caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, namespace?: string|null, created_by?: string|null}
+ * @phpstan-type OutputFunctionToolCallType array{arguments: string, call_id: string, name: string, type: 'function_call', id?: string|null, status?: 'in_progress'|'completed'|'incomplete', caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, namespace?: string|null}
  *
  * @implements ResponseContract<OutputFunctionToolCallType>
  */
@@ -41,7 +41,6 @@ final class OutputFunctionToolCall implements ResponseContract
         public readonly ?string $status,
         public readonly DirectToolCallCaller|ProgrammaticToolCallCaller|null $caller,
         public readonly ?string $namespace,
-        public readonly ?string $createdBy,
     ) {}
 
     /**
@@ -60,7 +59,6 @@ final class OutputFunctionToolCall implements ResponseContract
                 ? ToolCallCallerObjects::parse($attributes['caller'])
                 : null,
             namespace: $attributes['namespace'] ?? null,
-            createdBy: $attributes['created_by'] ?? null,
         );
     }
 
@@ -90,10 +88,6 @@ final class OutputFunctionToolCall implements ResponseContract
 
         if ($this->caller !== null) {
             $result['caller'] = $this->caller->toArray();
-        }
-
-        if ($this->createdBy !== null) {
-            $result['created_by'] = $this->createdBy;
         }
 
         return $result;

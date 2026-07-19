@@ -15,7 +15,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type DirectToolCallCallerType from DirectToolCallCaller
  * @phpstan-import-type ProgrammaticToolCallCallerType from ProgrammaticToolCallCaller
  *
- * @phpstan-type FunctionToolCallOutputType array{call_id: string, id: string, output: string|array<int, array<string, mixed>>, type: 'function_call_output', status?: 'in_progress'|'completed'|'incomplete', caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, created_by?: string|null}
+ * @phpstan-type FunctionToolCallOutputType array{call_id: string, output: string|array<int, array<string, mixed>>, type: 'function_call_output', id?: string, status?: 'in_progress'|'completed'|'incomplete', caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType}
  *
  * @implements ResponseContract<FunctionToolCallOutputType>
  */
@@ -35,12 +35,11 @@ final class FunctionToolCallOutput implements ResponseContract
      */
     private function __construct(
         public readonly string $callId,
-        public readonly string $id,
+        public readonly ?string $id,
         public readonly array|string $output,
         public readonly string $type,
         public readonly ?string $status,
         public readonly DirectToolCallCaller|ProgrammaticToolCallCaller|null $caller,
-        public readonly ?string $createdBy,
     ) {}
 
     /**
@@ -50,14 +49,13 @@ final class FunctionToolCallOutput implements ResponseContract
     {
         return new self(
             callId: $attributes['call_id'],
-            id: $attributes['id'],
+            id: $attributes['id'] ?? null,
             output: $attributes['output'],
             type: $attributes['type'],
             status: $attributes['status'] ?? null,
             caller: isset($attributes['caller'])
                 ? ToolCallCallerObjects::parse($attributes['caller'])
                 : null,
-            createdBy: $attributes['created_by'] ?? null,
         );
     }
 
@@ -68,10 +66,18 @@ final class FunctionToolCallOutput implements ResponseContract
     {
         $result = [
             'call_id' => $this->callId,
-            'id' => $this->id,
             'output' => $this->output,
             'type' => $this->type,
         ];
+
+        if ($this->id !== null) {
+            $result = [
+                'call_id' => $this->callId,
+                'id' => $this->id,
+                'output' => $this->output,
+                'type' => $this->type,
+            ];
+        }
 
         if ($this->status !== null) {
             $result['status'] = $this->status;
@@ -79,10 +85,6 @@ final class FunctionToolCallOutput implements ResponseContract
 
         if ($this->caller !== null) {
             $result['caller'] = $this->caller->toArray();
-        }
-
-        if ($this->createdBy !== null) {
-            $result['created_by'] = $this->createdBy;
         }
 
         return $result;

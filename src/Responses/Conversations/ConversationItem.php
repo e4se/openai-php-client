@@ -10,7 +10,6 @@ use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Responses\Conversations\Objects\Message;
 use OpenAI\Responses\Responses\Input\ComputerToolCallOutput;
 use OpenAI\Responses\Responses\Input\CustomToolCallOutput;
-use OpenAI\Responses\Responses\Input\FunctionToolCallOutput;
 use OpenAI\Responses\Responses\Input\LocalShellCallOutput;
 use OpenAI\Responses\Responses\Input\McpApprovalResponse;
 use OpenAI\Responses\Responses\Output\OutputAdditionalTools;
@@ -21,7 +20,8 @@ use OpenAI\Responses\Responses\Output\OutputCompaction;
 use OpenAI\Responses\Responses\Output\OutputComputerToolCall;
 use OpenAI\Responses\Responses\Output\OutputCustomToolCall;
 use OpenAI\Responses\Responses\Output\OutputFileSearchToolCall;
-use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCallItem;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputImageGenerationToolCall;
 use OpenAI\Responses\Responses\Output\OutputLocalShellCall;
 use OpenAI\Responses\Responses\Output\OutputMcpApprovalRequest;
@@ -54,7 +54,7 @@ final class ConversationItem implements ResponseContract
     use Fakeable;
 
     private function __construct(
-        public readonly Message|OutputFileSearchToolCall|OutputFunctionToolCall|FunctionToolCallOutput|LocalShellCallOutput|McpApprovalResponse|CustomToolCallOutput|OutputAdditionalTools|OutputApplyPatchCall|OutputApplyPatchCallOutput|OutputCompaction|OutputWebSearchToolCall|OutputComputerToolCall|ComputerToolCallOutput|OutputProgram|OutputProgramOutput|OutputReasoning|OutputShellCall|OutputShellCallOutput|OutputToolSearchCall|OutputToolSearchOutput|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCodeInterpreterToolCall|OutputLocalShellCall|OutputCustomToolCall $item
+        public readonly Message|OutputFileSearchToolCall|OutputFunctionToolCallItem|OutputFunctionToolCallOutput|LocalShellCallOutput|McpApprovalResponse|CustomToolCallOutput|OutputAdditionalTools|OutputApplyPatchCall|OutputApplyPatchCallOutput|OutputCompaction|OutputWebSearchToolCall|OutputComputerToolCall|ComputerToolCallOutput|OutputProgram|OutputProgramOutput|OutputReasoning|OutputShellCall|OutputShellCallOutput|OutputToolSearchCall|OutputToolSearchOutput|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCodeInterpreterToolCall|OutputLocalShellCall|OutputCustomToolCall $item
     ) {}
 
     /**

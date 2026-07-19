@@ -16,7 +16,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type ProgrammaticToolCallCallerType from ProgrammaticToolCallCaller
  *
  * @phpstan-type OutputShellCallActionType array{commands: array<int, string>, max_output_length: int|null, timeout_ms: int|null}
- * @phpstan-type OutputShellCallType array{action: OutputShellCallActionType, call_id: string, id?: string|null, status: 'in_progress'|'completed'|'incomplete', type: 'shell_call', environment?: array<string, mixed>|null, caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, created_by?: string|null}
+ * @phpstan-type OutputShellCallType array{action: OutputShellCallActionType, call_id: string, id: string, status: 'in_progress'|'completed'|'incomplete', type: 'shell_call', environment?: array<string, mixed>|null, caller?: DirectToolCallCallerType|ProgrammaticToolCallCallerType, created_by?: string|null}
  *
  * @implements ResponseContract<OutputShellCallType>
  */
@@ -36,13 +36,12 @@ final class OutputShellCall implements ResponseContract
     private function __construct(
         public readonly array $action,
         public readonly string $callId,
-        public readonly ?string $id,
+        public readonly string $id,
         public readonly string $status,
         public readonly string $type,
         public readonly ?array $environment,
         public readonly DirectToolCallCaller|ProgrammaticToolCallCaller|null $caller,
         public readonly ?string $createdBy,
-        private readonly bool $hasId,
         private readonly bool $hasEnvironment,
     ) {}
 
@@ -52,7 +51,7 @@ final class OutputShellCall implements ResponseContract
         return new self(
             action: $attributes['action'],
             callId: $attributes['call_id'],
-            id: $attributes['id'] ?? null,
+            id: $attributes['id'],
             status: $attributes['status'],
             type: $attributes['type'],
             environment: $attributes['environment'] ?? null,
@@ -60,7 +59,6 @@ final class OutputShellCall implements ResponseContract
                 ? ToolCallCallerObjects::parse($attributes['caller'])
                 : null,
             createdBy: $attributes['created_by'] ?? null,
-            hasId: array_key_exists('id', $attributes),
             hasEnvironment: array_key_exists('environment', $attributes),
         );
     }
@@ -71,13 +69,7 @@ final class OutputShellCall implements ResponseContract
         $result = [
             'action' => $this->action,
             'call_id' => $this->callId,
-        ];
-
-        if ($this->hasId) {
-            $result['id'] = $this->id;
-        }
-
-        $result += [
+            'id' => $this->id,
             'status' => $this->status,
             'type' => $this->type,
         ];

@@ -11,7 +11,6 @@ test('current web search may contain only its type', function () {
         ->toBeInstanceOf(WebSearchTool::class)
         ->type->toBe('web_search_2025_08_26')
         ->filters->toBeNull()
-        ->searchContentTypes->toBeNull()
         ->searchContextSize->toBeNull()
         ->userLocation->toBeNull();
 
@@ -37,16 +36,5 @@ test('current web search fields are preserved', function () {
         ->userLocation->toBeInstanceOf(WebSearchUserLocation::class)
         ->userLocation->type->toBeNull();
 
-    expect($response->toArray())->toBe($attributes);
-});
-
-test('preview search content types are preserved', function () {
-    $attributes = [
-        'type' => 'web_search_preview_2025_03_11',
-        'search_content_types' => ['text', 'image'],
-    ];
-    $response = WebSearchTool::from($attributes);
-
-    expect($response->searchContentTypes)->toBe(['text', 'image']);
     expect($response->toArray())->toBe($attributes);
 });

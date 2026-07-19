@@ -21,6 +21,7 @@ use OpenAI\Responses\Responses\Tool\ProgrammaticToolCallingTool;
 use OpenAI\Responses\Responses\Tool\RemoteMcpTool;
 use OpenAI\Responses\Responses\Tool\ShellTool;
 use OpenAI\Responses\Responses\Tool\ToolSearchTool;
+use OpenAI\Responses\Responses\Tool\WebSearchPreviewTool;
 use OpenAI\Responses\Responses\Tool\WebSearchTool;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
@@ -28,7 +29,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type ResponseToolObjectTypes from ToolObjects
  * @phpstan-import-type ResponseToolObjectReturnType from ToolObjects
  *
- * @phpstan-type OutputAdditionalToolsType array{id?: string|null, role: 'unknown'|'user'|'assistant'|'system'|'critic'|'discriminator'|'developer'|'tool', tools: ResponseToolObjectTypes, type: 'additional_tools'}
+ * @phpstan-type OutputAdditionalToolsType array{id: string, role: 'unknown'|'user'|'assistant'|'system'|'critic'|'discriminator'|'developer'|'tool', tools: ResponseToolObjectTypes, type: 'additional_tools'}
  *
  * @implements ResponseContract<OutputAdditionalToolsType>
  */
@@ -45,7 +46,7 @@ final class OutputAdditionalTools implements ResponseContract
      * @param  'additional_tools'  $type
      */
     private function __construct(
-        public readonly ?string $id,
+        public readonly string $id,
         public readonly string $role,
         public readonly array $tools,
         public readonly string $type,
@@ -55,7 +56,7 @@ final class OutputAdditionalTools implements ResponseContract
     public static function from(array $attributes): self
     {
         return new self(
-            id: $attributes['id'] ?? null,
+            id: $attributes['id'],
             role: $attributes['role'],
             tools: ToolObjects::parse($attributes['tools']),
             type: $attributes['type'],
@@ -65,19 +66,14 @@ final class OutputAdditionalTools implements ResponseContract
     /** {@inheritDoc} */
     public function toArray(): array
     {
-        $result = [
+        return [
+            'id' => $this->id,
             'role' => $this->role,
             'tools' => array_map(
-                fn (ApplyPatchTool|CodeInterpreterTool|ComputerTool|ComputerUseTool|CustomTool|FileSearchTool|FunctionTool|ImageGenerationTool|LocalShellTool|NamespaceTool|ProgrammaticToolCallingTool|RemoteMcpTool|ShellTool|ToolSearchTool|WebSearchTool $tool): array => $tool->toArray(),
+                fn (ApplyPatchTool|CodeInterpreterTool|ComputerTool|ComputerUseTool|CustomTool|FileSearchTool|FunctionTool|ImageGenerationTool|LocalShellTool|NamespaceTool|ProgrammaticToolCallingTool|RemoteMcpTool|ShellTool|ToolSearchTool|WebSearchPreviewTool|WebSearchTool $tool): array => $tool->toArray(),
                 $this->tools,
             ),
             'type' => $this->type,
         ];
-
-        if ($this->id !== null) {
-            $result = ['id' => $this->id, ...$result];
-        }
-
-        return $result;
     }
 }

@@ -9,7 +9,7 @@ use OpenAI\Responses\Concerns\ArrayAccessible;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
 /**
- * @phpstan-type LocalShellToolType array{type: 'local_shell', allowed_callers?: array<int, 'direct'|'programmatic'>}
+ * @phpstan-type LocalShellToolType array{type: 'local_shell'}
  *
  * @implements ResponseContract<LocalShellToolType>
  */
@@ -20,13 +20,9 @@ final class LocalShellTool implements ResponseContract
 
     use Fakeable;
 
-    /**
-     * @param  'local_shell'  $type
-     * @param  array<int, 'direct'|'programmatic'>|null  $allowedCallers
-     */
+    /** @param 'local_shell' $type */
     private function __construct(
         public readonly string $type,
-        public readonly ?array $allowedCallers,
     ) {}
 
     /** @param LocalShellToolType $attributes */
@@ -34,19 +30,12 @@ final class LocalShellTool implements ResponseContract
     {
         return new self(
             type: $attributes['type'],
-            allowedCallers: $attributes['allowed_callers'] ?? null,
         );
     }
 
     /** {@inheritDoc} */
     public function toArray(): array
     {
-        $result = ['type' => $this->type];
-
-        if ($this->allowedCallers !== null) {
-            $result['allowed_callers'] = $this->allowedCallers;
-        }
-
-        return $result;
+        return ['type' => $this->type];
     }
 }

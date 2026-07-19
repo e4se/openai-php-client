@@ -55,6 +55,7 @@ use OpenAI\Responses\Responses\Tool\ProgrammaticToolCallingTool;
 use OpenAI\Responses\Responses\Tool\RemoteMcpTool;
 use OpenAI\Responses\Responses\Tool\ShellTool;
 use OpenAI\Responses\Responses\Tool\ToolSearchTool;
+use OpenAI\Responses\Responses\Tool\WebSearchPreviewTool;
 use OpenAI\Responses\Responses\Tool\WebSearchTool;
 use OpenAI\Responses\Responses\ToolChoice\AllowedToolsToolChoice;
 use OpenAI\Responses\Responses\ToolChoice\CustomToolChoice;
@@ -234,7 +235,7 @@ final class RetrieveResponse implements ResponseContract, ResponseHasMetaInforma
                 ? $this->toolChoice
                 : $this->toolChoice->toArray(),
             'tools' => array_map(
-                fn (ApplyPatchTool|ComputerTool|ComputerUseTool|FileSearchTool|FunctionTool|WebSearchTool|ImageGenerationTool|LocalShellTool|RemoteMcpTool|CodeInterpreterTool|ShellTool|ToolSearchTool|NamespaceTool|CustomTool|ProgrammaticToolCallingTool $tool): array => $tool->toArray(),
+                fn (ApplyPatchTool|ComputerTool|ComputerUseTool|FileSearchTool|FunctionTool|WebSearchPreviewTool|WebSearchTool|ImageGenerationTool|LocalShellTool|RemoteMcpTool|CodeInterpreterTool|ShellTool|ToolSearchTool|NamespaceTool|CustomTool|ProgrammaticToolCallingTool $tool): array => $tool->toArray(),
                 $this->tools
             ),
             'top_logprobs' => $this->topLogProbs,

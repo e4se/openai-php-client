@@ -228,7 +228,7 @@ function listInputItemsResource(): array
             outputReasoning(),
             outputCodeInterpreterToolCall(),
             outputLocalShellCall(),
-            outputCustomToolCall(),
+            [...outputCustomToolCall(), 'status' => 'completed'],
         ],
         'first_id' => 'msg_67ccf190ca3881909d433c50b1f6357e087bb177ab789d5c',
         'last_id' => 'msg_67ccf190ca3881909d433c50b1f6357e087bb177ab789d5c',
@@ -575,6 +575,7 @@ function outputComputerToolCallGa(): array
     return [
         'type' => 'computer_call',
         'call_id' => 'call_ga_computer_123',
+        'id' => 'cu_ga_computer_123',
         'actions' => [
             [
                 'button' => 'left',
@@ -587,6 +588,7 @@ function outputComputerToolCallGa(): array
                 'type' => 'keypress',
             ],
         ],
+        'pending_safety_checks' => [],
         'status' => 'completed',
     ];
 }
@@ -914,6 +916,7 @@ function outputShellCall(): array
             'max_output_length' => 4096,
         ],
         'call_id' => 'call_shell_documented',
+        'id' => 'sh_documented',
         'status' => 'in_progress',
         'type' => 'shell_call',
     ];
@@ -1304,7 +1307,6 @@ function outputToolSearchOutput(): array
             [
                 'type' => 'web_search',
                 'search_context_size' => 'low',
-                'user_location' => null,
             ],
         ],
         'type' => 'tool_search_output',

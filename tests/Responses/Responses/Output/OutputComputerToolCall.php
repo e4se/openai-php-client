@@ -44,8 +44,9 @@ test('hydrates and serializes GA batched actions', function () {
         ->actions->toHaveCount(2)
         ->actions->{0}->toBeInstanceOf(OutputComputerActionClick::class)
         ->actions->{1}->toBeInstanceOf(OutputComputerActionKeyPress::class)
-        ->id->toBeNull()
-        ->pendingSafetyChecks->toBeNull();
+        ->id->toBe('cu_ga_computer_123')
+        ->pendingSafetyChecks->toBeArray()
+        ->pendingSafetyChecks->toBeEmpty();
 
     expect($response->toArray())->toBe(outputComputerToolCallGa());
 });

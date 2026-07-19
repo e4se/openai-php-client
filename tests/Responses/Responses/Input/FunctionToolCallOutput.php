@@ -53,3 +53,16 @@ test('content array output', function () {
     expect($output->output)->toBe($attributes['output']);
     expect($output->toArray())->toBe($attributes);
 });
+
+test('response-only id and status remain optional in input params', function () {
+    $attributes = functionToolCallOutputProgrammatic();
+    unset($attributes['id'], $attributes['status']);
+
+    $output = FunctionToolCallOutput::from($attributes);
+
+    expect($output)
+        ->id->toBeNull()
+        ->status->toBeNull();
+
+    expect($output->toArray())->toBe($attributes);
+});

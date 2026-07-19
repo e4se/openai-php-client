@@ -1,15 +1,15 @@
 <?php
 
 use OpenAI\Responses\Meta\MetaInformation;
-use OpenAI\Responses\Responses\Input\CustomToolCallOutput;
-use OpenAI\Responses\Responses\Input\FunctionToolCallOutput;
 use OpenAI\Responses\Responses\ListInputItems;
 use OpenAI\Responses\Responses\Output\OutputAdditionalTools;
 use OpenAI\Responses\Responses\Output\OutputApplyPatchCall;
 use OpenAI\Responses\Responses\Output\OutputApplyPatchCallOutput;
 use OpenAI\Responses\Responses\Output\OutputCompaction;
-use OpenAI\Responses\Responses\Output\OutputCustomToolCall;
-use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
+use OpenAI\Responses\Responses\Output\OutputCustomToolCallItem;
+use OpenAI\Responses\Responses\Output\OutputCustomToolCallOutput;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCallItem;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCallOutput;
 use OpenAI\Responses\Responses\Output\OutputProgram;
 use OpenAI\Responses\Responses\Output\OutputProgramOutput;
 use OpenAI\Responses\Responses\Output\OutputShellCall;
@@ -69,11 +69,13 @@ test('fake with override', function () {
 
 test('program items can be replayed as input', function () {
     $payload = listInputItemsResource();
+    $customCall = outputCustomToolCallProgrammatic();
+    $customCall['status'] = 'completed';
     $payload['data'] = [
         outputProgram(),
         outputProgramOutput(),
         functionToolCallOutputProgrammatic(),
-        outputCustomToolCallProgrammatic(),
+        $customCall,
         customToolCallOutputProgrammatic(),
         outputShellCallProgrammatic(),
         outputShellCallOutputProgrammatic(),
@@ -90,9 +92,9 @@ test('program items can be replayed as input', function () {
         ->data->{0}->toBeInstanceOf(OutputProgram::class)
         ->data->{1}->toBeInstanceOf(OutputProgramOutput::class)
         ->data->{2}->caller->callerId->toBe('call_prog_123')
-        ->data->{3}->toBeInstanceOf(OutputCustomToolCall::class)
+        ->data->{3}->toBeInstanceOf(OutputCustomToolCallItem::class)
         ->data->{3}->caller->callerId->toBe('call_prog_123')
-        ->data->{4}->toBeInstanceOf(CustomToolCallOutput::class)
+        ->data->{4}->toBeInstanceOf(OutputCustomToolCallOutput::class)
         ->data->{4}->caller->callerId->toBe('call_prog_123')
         ->data->{5}->toBeInstanceOf(OutputShellCall::class)
         ->data->{6}->toBeInstanceOf(OutputShellCallOutput::class)
@@ -106,6 +108,7 @@ test('program items can be replayed as input', function () {
 
 test('listed tool items preserve provenance', function () {
     $functionCall = outputFunctionToolCallProgrammatic();
+    $functionCall['status'] = 'completed';
     $functionCall['created_by'] = 'actor_function_call';
 
     $customCall = outputCustomToolCallProgrammatic();
@@ -124,14 +127,14 @@ test('listed tool items preserve provenance', function () {
     $result = ListInputItems::from($payload, meta());
 
     expect($result->data)
-        ->{0}->toBeInstanceOf(OutputFunctionToolCall::class)
+        ->{0}->toBeInstanceOf(OutputFunctionToolCallItem::class)
         ->{0}->createdBy->toBe('actor_function_call')
-        ->{1}->toBeInstanceOf(OutputCustomToolCall::class)
+        ->{1}->toBeInstanceOf(OutputCustomToolCallItem::class)
         ->{1}->status->toBe('completed')
         ->{1}->createdBy->toBe('actor_custom_call')
-        ->{2}->toBeInstanceOf(FunctionToolCallOutput::class)
+        ->{2}->toBeInstanceOf(OutputFunctionToolCallOutput::class)
         ->{2}->createdBy->toBe('actor_function_output')
-        ->{3}->toBeInstanceOf(CustomToolCallOutput::class)
+        ->{3}->toBeInstanceOf(OutputCustomToolCallOutput::class)
         ->{3}->createdBy->toBe('actor_custom_output');
 
     expect($result->toArray()['data'])->toBe($payload['data']);

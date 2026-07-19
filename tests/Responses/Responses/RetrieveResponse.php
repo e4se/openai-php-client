@@ -223,7 +223,7 @@ test('programmatic shell and apply patch variants', function () {
 
     expect($response->output)
         ->{0}->toBeInstanceOf(OutputShellCall::class)
-        ->{0}->id->toBeNull()
+        ->{0}->id->toBe('sh_documented')
         ->{1}->toBeInstanceOf(OutputShellCall::class)
         ->{2}->toBeInstanceOf(OutputApplyPatchCall::class);
 

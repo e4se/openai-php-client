@@ -46,8 +46,8 @@ final class FunctionTool implements ResponseContract
     {
         return new self(
             name: $attributes['name'],
-            parameters: $attributes['parameters'] ?? null,
-            strict: $attributes['strict'] ?? null,
+            parameters: $attributes['parameters'],
+            strict: $attributes['strict'],
             type: $attributes['type'],
             description: $attributes['description'] ?? null,
             deferLoading: $attributes['defer_loading'] ?? null,

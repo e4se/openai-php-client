@@ -23,16 +23,6 @@ test('to array', function () {
     expect($response->toArray())->toBe(outputAdditionalTools());
 });
 
-test('id is optional for input items', function () {
-    $attributes = outputAdditionalTools();
-    unset($attributes['id']);
-
-    $response = OutputAdditionalTools::from($attributes);
-
-    expect($response->id)->toBeNull();
-    expect($response->toArray())->toBe($attributes);
-});
-
 test('current computer and web search tools are preserved', function () {
     $attributes = outputAdditionalTools();
     $attributes['tools'] = [
