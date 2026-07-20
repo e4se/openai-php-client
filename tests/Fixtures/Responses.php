@@ -729,6 +729,22 @@ function outputCustomToolCall(): array
 /**
  * @return array<string, mixed>
  */
+function outputFunctionToolCall(): array
+{
+    return [
+        'arguments' => '{"customer_id":"CUST-12345"}',
+        'call_id' => 'call_abc123',
+        'name' => 'list_open_orders',
+        'namespace' => 'crm',
+        'type' => 'function_call',
+        'id' => 'fc_abc123',
+        'status' => 'completed',
+    ];
+}
+
+/**
+ * @return array<string, mixed>
+ */
 function outputImageGenerationToolCall(): array
 {
     return [
@@ -1046,4 +1062,14 @@ function responseRateLimitsUpdatedEvent()
 function responseOutputItemCompactionDoneEvent()
 {
     return fopen(__DIR__.'/Streams/ResponseOutputItemCompactionDone.txt', 'r');
+}
+
+function responseOutputItemToolSearchCallAddedEvent()
+{
+    return fopen(__DIR__.'/Streams/ResponseOutputItemToolSearchCallAdded.txt', 'r');
+}
+
+function responseOutputItemToolSearchOutputDoneEvent()
+{
+    return fopen(__DIR__.'/Streams/ResponseOutputItemToolSearchOutputDone.txt', 'r');
 }
