@@ -19,6 +19,8 @@ use OpenAI\Responses\Responses\Output\OutputMcpApprovalRequest;
 use OpenAI\Responses\Responses\Output\OutputMcpCall;
 use OpenAI\Responses\Responses\Output\OutputMcpListTools;
 use OpenAI\Responses\Responses\Output\OutputMessage;
+use OpenAI\Responses\Responses\Output\OutputProgram;
+use OpenAI\Responses\Responses\Output\OutputProgramOutput;
 use OpenAI\Responses\Responses\Output\OutputReasoning;
 use OpenAI\Responses\Responses\Output\OutputWebSearchToolCall;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
@@ -36,8 +38,10 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type OutputMcpCallType from OutputMcpCall
  * @phpstan-import-type OutputCodeInterpreterToolCallType from OutputCodeInterpreterToolCall
  * @phpstan-import-type OutputCompactionType from OutputCompaction
+ * @phpstan-import-type OutputProgramType from OutputProgram
+ * @phpstan-import-type OutputProgramOutputType from OutputProgramOutput
  *
- * @phpstan-type OutputItemType array{type: string, output_index: int, sequence_number: int, item: OutputCodeInterpreterToolCallType|OutputComputerToolCallType|OutputFileSearchToolCallType|OutputFunctionToolCallType|OutputMessageType|OutputReasoningType|OutputWebSearchToolCallType|OutputMcpListToolsType|OutputMcpApprovalRequestType|OutputMcpCallType|OutputImageGenerationToolCallType|OutputCompactionType}
+ * @phpstan-type OutputItemType array{type: string, output_index: int, sequence_number: int, item: OutputCodeInterpreterToolCallType|OutputComputerToolCallType|OutputFileSearchToolCallType|OutputFunctionToolCallType|OutputMessageType|OutputProgramType|OutputProgramOutputType|OutputReasoningType|OutputWebSearchToolCallType|OutputMcpListToolsType|OutputMcpApprovalRequestType|OutputMcpCallType|OutputImageGenerationToolCallType|OutputCompactionType}
  *
  * @implements ResponseContract<OutputItemType>
  */
@@ -55,7 +59,7 @@ final class OutputItem implements ResponseContract, ResponseHasMetaInformationCo
         public readonly string $type,
         public readonly int $outputIndex,
         public readonly int $sequenceNumber,
-        public readonly OutputMessage|OutputCodeInterpreterToolCall|OutputFileSearchToolCall|OutputFunctionToolCall|OutputWebSearchToolCall|OutputComputerToolCall|OutputReasoning|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCompaction $item,
+        public readonly OutputMessage|OutputCodeInterpreterToolCall|OutputFileSearchToolCall|OutputFunctionToolCall|OutputProgram|OutputProgramOutput|OutputWebSearchToolCall|OutputComputerToolCall|OutputReasoning|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCompaction $item,
         private readonly MetaInformation $meta,
     ) {}
 
@@ -68,6 +72,8 @@ final class OutputItem implements ResponseContract, ResponseHasMetaInformationCo
             'message' => OutputMessage::from($attributes['item']),
             'file_search_call' => OutputFileSearchToolCall::from($attributes['item']),
             'function_call' => OutputFunctionToolCall::from($attributes['item']),
+            'program' => OutputProgram::from($attributes['item']),
+            'program_output' => OutputProgramOutput::from($attributes['item']),
             'web_search_call' => OutputWebSearchToolCall::from($attributes['item']),
             'computer_call' => OutputComputerToolCall::from($attributes['item']),
             'reasoning' => OutputReasoning::from($attributes['item']),
