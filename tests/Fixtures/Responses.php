@@ -1047,3 +1047,13 @@ function responseOutputItemCompactionDoneEvent()
 {
     return fopen(__DIR__.'/Streams/ResponseOutputItemCompactionDone.txt', 'r');
 }
+
+function responseOutputItemToolSearchCallAddedEvent()
+{
+    return fopen(__DIR__.'/Streams/ResponseOutputItemToolSearchCallAdded.txt', 'r');
+}
+
+function responseOutputItemToolSearchOutputDoneEvent()
+{
+    return fopen(__DIR__.'/Streams/ResponseOutputItemToolSearchOutputDone.txt', 'r');
+}
