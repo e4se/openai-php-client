@@ -22,6 +22,8 @@ use OpenAI\Responses\Responses\Output\OutputMessage;
 use OpenAI\Responses\Responses\Output\OutputProgram;
 use OpenAI\Responses\Responses\Output\OutputProgramOutput;
 use OpenAI\Responses\Responses\Output\OutputReasoning;
+use OpenAI\Responses\Responses\Output\OutputToolSearchCall;
+use OpenAI\Responses\Responses\Output\OutputToolSearchOutput;
 use OpenAI\Responses\Responses\Output\OutputWebSearchToolCall;
 use OpenAI\Testing\Responses\Concerns\Fakeable;
 
@@ -40,8 +42,10 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
  * @phpstan-import-type OutputCompactionType from OutputCompaction
  * @phpstan-import-type OutputProgramType from OutputProgram
  * @phpstan-import-type OutputProgramOutputType from OutputProgramOutput
+ * @phpstan-import-type OutputToolSearchCallType from OutputToolSearchCall
+ * @phpstan-import-type OutputToolSearchOutputType from OutputToolSearchOutput
  *
- * @phpstan-type OutputItemType array{type: string, output_index: int, sequence_number: int, item: OutputCodeInterpreterToolCallType|OutputComputerToolCallType|OutputFileSearchToolCallType|OutputFunctionToolCallType|OutputMessageType|OutputProgramType|OutputProgramOutputType|OutputReasoningType|OutputWebSearchToolCallType|OutputMcpListToolsType|OutputMcpApprovalRequestType|OutputMcpCallType|OutputImageGenerationToolCallType|OutputCompactionType}
+ * @phpstan-type OutputItemType array{type: string, output_index: int, sequence_number: int, item: OutputCodeInterpreterToolCallType|OutputComputerToolCallType|OutputFileSearchToolCallType|OutputFunctionToolCallType|OutputMessageType|OutputProgramType|OutputProgramOutputType|OutputReasoningType|OutputWebSearchToolCallType|OutputMcpListToolsType|OutputMcpApprovalRequestType|OutputMcpCallType|OutputImageGenerationToolCallType|OutputCompactionType|OutputToolSearchCallType|OutputToolSearchOutputType}
  *
  * @implements ResponseContract<OutputItemType>
  */
@@ -59,7 +63,7 @@ final class OutputItem implements ResponseContract, ResponseHasMetaInformationCo
         public readonly string $type,
         public readonly int $outputIndex,
         public readonly int $sequenceNumber,
-        public readonly OutputMessage|OutputCodeInterpreterToolCall|OutputFileSearchToolCall|OutputFunctionToolCall|OutputProgram|OutputProgramOutput|OutputWebSearchToolCall|OutputComputerToolCall|OutputReasoning|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCompaction $item,
+        public readonly OutputMessage|OutputCodeInterpreterToolCall|OutputFileSearchToolCall|OutputFunctionToolCall|OutputProgram|OutputProgramOutput|OutputWebSearchToolCall|OutputComputerToolCall|OutputReasoning|OutputMcpListTools|OutputMcpApprovalRequest|OutputMcpCall|OutputImageGenerationToolCall|OutputCompaction|OutputToolSearchCall|OutputToolSearchOutput $item,
         private readonly MetaInformation $meta,
     ) {}
 
@@ -68,7 +72,10 @@ final class OutputItem implements ResponseContract, ResponseHasMetaInformationCo
      */
     public static function from(array $attributes, MetaInformation $meta): self
     {
-        $item = match ($attributes['item']['type']) {
+        /** @var 'message'|'file_search_call'|'function_call'|'program'|'program_output'|'web_search_call'|'computer_call'|'reasoning'|'image_generation_call'|'mcp_list_tools'|'mcp_approval_request'|'mcp_call'|'code_interpreter_call'|'compaction'|'tool_search_call'|'tool_search_output' $itemType */
+        $itemType = $attributes['item']['type'];
+
+        $item = match ($itemType) {
             'message' => OutputMessage::from($attributes['item']),
             'file_search_call' => OutputFileSearchToolCall::from($attributes['item']),
             'function_call' => OutputFunctionToolCall::from($attributes['item']),
@@ -83,6 +90,8 @@ final class OutputItem implements ResponseContract, ResponseHasMetaInformationCo
             'mcp_call' => OutputMcpCall::from($attributes['item']),
             'code_interpreter_call' => OutputCodeInterpreterToolCall::from($attributes['item']),
             'compaction' => OutputCompaction::from($attributes['item']),
+            'tool_search_call' => OutputToolSearchCall::from($attributes['item']),
+            'tool_search_output' => OutputToolSearchOutput::from($attributes['item']),
         };
 
         return new self(

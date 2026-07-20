@@ -11,7 +11,7 @@ use OpenAI\Testing\Responses\Concerns\Fakeable;
 /**
  * @phpstan-import-type OutputFunctionToolCallCallerType from OutputFunctionToolCallCaller
  *
- * @phpstan-type OutputFunctionToolCallType array{arguments: string, call_id: string, name: string, type: 'function_call', id: string, status?: 'in_progress'|'completed'|'incomplete', caller?: OutputFunctionToolCallCallerType|null}
+ * @phpstan-type OutputFunctionToolCallType array{arguments: string, call_id: string, name: string, namespace?: ?string, type: 'function_call', id: string, status?: 'in_progress'|'completed'|'incomplete', caller?: OutputFunctionToolCallCallerType|null}
  *
  * @implements ResponseContract<OutputFunctionToolCallType>
  */
@@ -35,6 +35,7 @@ final class OutputFunctionToolCall implements ResponseContract
         public readonly string $type,
         public readonly string $id,
         public readonly ?string $status,
+        public readonly ?string $namespace,
         public readonly ?OutputFunctionToolCallCaller $caller,
     ) {}
 
@@ -50,6 +51,7 @@ final class OutputFunctionToolCall implements ResponseContract
             type: $attributes['type'],
             id: $attributes['id'],
             status: $attributes['status'] ?? null,
+            namespace: $attributes['namespace'] ?? null,
             caller: isset($attributes['caller'])
                 ? OutputFunctionToolCallCaller::from($attributes['caller'])
                 : null,
@@ -65,6 +67,7 @@ final class OutputFunctionToolCall implements ResponseContract
             'arguments' => $this->arguments,
             'call_id' => $this->callId,
             'name' => $this->name,
+            'namespace' => $this->namespace,
             'type' => $this->type,
             'id' => $this->id,
             'status' => $this->status,
