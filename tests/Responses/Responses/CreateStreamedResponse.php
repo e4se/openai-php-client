@@ -3,11 +3,14 @@
 use OpenAI\Responses\Responses\CreateResponse;
 use OpenAI\Responses\Responses\CreateStreamedResponse;
 use OpenAI\Responses\Responses\Output\OutputCompaction;
+use OpenAI\Responses\Responses\Output\OutputToolSearchCall;
+use OpenAI\Responses\Responses\Output\OutputToolSearchOutput;
 use OpenAI\Responses\Responses\Streaming\OutputItem;
 use OpenAI\Responses\Responses\Streaming\RateLimits;
 use OpenAI\Responses\Responses\Streaming\ReasoningTextDelta;
 use OpenAI\Responses\Responses\Streaming\ReasoningTextDone;
 use OpenAI\Responses\Responses\Streaming\Response;
+use OpenAI\Responses\Responses\Tool\WebSearchTool;
 
 test('fake', function () {
     $response = CreateStreamedResponse::fake();
@@ -84,4 +87,35 @@ test('output item done event with compaction item', function () {
         ->response->item->id->toBe('cmp_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c')
         ->response->item->encryptedContent->toBe('encrypted_string_value')
         ->response->item->createdBy->toBe('user_123');
+});
+
+test('output item added event with tool search call item', function () {
+    $response = CreateStreamedResponse::fake(responseOutputItemToolSearchCallAddedEvent());
+
+    expect($response->getIterator()->current())
+        ->toBeInstanceOf(CreateStreamedResponse::class)
+        ->event->toBe('response.output_item.added')
+        ->response->toBeInstanceOf(OutputItem::class)
+        ->response->outputIndex->toBe(0)
+        ->response->sequenceNumber->toBe(12)
+        ->response->item->toBeInstanceOf(OutputToolSearchCall::class)
+        ->response->item->id->toBe('tsc_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c')
+        ->response->item->callId->toBe('call_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c')
+        ->response->item->type->toBe('tool_search_call');
+});
+
+test('output item done event with tool search output item', function () {
+    $response = CreateStreamedResponse::fake(responseOutputItemToolSearchOutputDoneEvent());
+
+    expect($response->getIterator()->current())
+        ->toBeInstanceOf(CreateStreamedResponse::class)
+        ->event->toBe('response.output_item.done')
+        ->response->toBeInstanceOf(OutputItem::class)
+        ->response->outputIndex->toBe(1)
+        ->response->sequenceNumber->toBe(13)
+        ->response->item->toBeInstanceOf(OutputToolSearchOutput::class)
+        ->response->item->id->toBe('tso_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c')
+        ->response->item->tools->toHaveCount(1)
+        ->response->item->tools->{0}->toBeInstanceOf(WebSearchTool::class)
+        ->response->item->type->toBe('tool_search_output');
 });
